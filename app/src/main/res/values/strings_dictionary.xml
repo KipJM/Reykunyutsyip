@@ -1,0 +1,29 @@
+<resources>
+    <!-- Dictionary -->
+    <string name="n">noun</string>
+    <string name="n_si">intransitive verb</string>
+    <string name="n_pr">proper name</string>
+    <string name="pn">pronoun</string>
+    <string name="adj">adjective</string>
+    <string name="num">numeral</string>
+    <string name="adv">adverb</string>
+    <string name="adp">adposition</string>
+    <string name="adp_len">leniting adposition</string>
+    <string name="intj">interjection</string>
+    <string name="part">particle</string>
+    <string name="conj">conjunction</string>
+    <string name="ctr">subordinate conjunction (\'F-word\')</string>
+    <string name="v_unknown">verb, unknown type</string>
+    <string name="v_in">intransitive verb</string>
+    <string name="v_tr">transitive verb</string>
+    <string name="v_m">modal verb</string>
+    <string name="v_si">intransitive verb</string>
+    <string name="v_cp">copula verb</string>
+    <string name="phr">phrase</string>
+    <string name="inter">interrogative</string>
+    <string name="aff_pre">prefix</string>
+    <string name="aff_in">infix</string>
+    <string name="aff_suf">suffix</string>
+    <string name="nv_si">intransitive verb</string>
+    <string name="unknown">unknown</string>
+</resources>
