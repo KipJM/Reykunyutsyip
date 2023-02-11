@@ -12,6 +12,7 @@
     <string name="polish">Polski</string>
     <string name="russian">Pусский</string>
     <string name="swedish">Svenska</string>
+    <string name="search_description">Search</string>
     <!-- UI -->
 
 </resources>

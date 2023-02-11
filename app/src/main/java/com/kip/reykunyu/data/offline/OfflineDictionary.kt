@@ -6,20 +6,25 @@ import com.kip.reykunyu.data.api.ResponseStatus
 import com.kip.reykunyu.data.api.ReykunyuApi
 import com.kip.reykunyu.data.dict.Navi
 import com.kip.reykunyu.data.dict.NaviIntermediate
-import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import java.io.IOException
-import java.util.Dictionary
-import kotlin.system.measureTimeMillis
 
 data class NaviDictionary (
     val dictionary: Map<String, Navi>
     )
 
+@OptIn(ExperimentalSerializationApi::class)
 object OfflineDictionary {
-    var dictionaryLoaded: Boolean = false
     var dictionary: NaviDictionary? = null
+        private set
+    private val emptyDict: NaviDictionary = NaviDictionary(emptyMap())
+
+    /**
+     * A null-safe access for the dictionary. Returns an empty dictionary if not loaded. READ ONLY
+     */
+    val safeDictionary: NaviDictionary
+        get() = dictionary ?: emptyDict
 
 
     private val jsonFormat = Json {
@@ -27,43 +32,38 @@ object OfflineDictionary {
         ignoreUnknownKeys = true
         explicitNulls = false
     }
-
-    public suspend fun download(): Response<NaviDictionary> {
-        try {
-            var dictJson = ReykunyuApi.getDictionary()
+    suspend fun download(): Response<NaviDictionary> {
+        return try {
+            val dictJson = ReykunyuApi.getDictionary()
             if(convertDictionary(json = dictJson)) {
-                dictionaryLoaded = true
-                return Response(ResponseStatus.Success, dictionary)
+                Log.i("REYKUNYU", "DICTIONARY LOADED!")
+                Response(ResponseStatus.Success, dictionary)
             } else {
-                return Response(ResponseStatus.Error)
+                Response(ResponseStatus.Error)
             }
         } catch (e: Exception) {
             Log.wtf("REYKUNYU", e)
-            return Response(ResponseStatus.Error)
+            Response(ResponseStatus.Error)
         }
     }
 
     /**
      * Convert Json to the Na'vi dictionary and saves it. Returns true if conversion succeeded.
      */
-    public suspend fun convertDictionary(json: String): Boolean {
-        //Time it!
-        val time = measureTimeMillis {
-            val naviDict = mutableMapOf<String, Navi>()
-            try {
-                val dictIntermediate =
-                    jsonFormat.decodeFromString<Map<String, NaviIntermediate>>(json)
-                for (intermediate in dictIntermediate) {
-                    naviDict[intermediate.key] = Navi.create(intermediate.value)
-                }
-            } catch (e: Exception) {
-                Log.wtf("REYKUNYU", e)
-                return false
+    private fun convertDictionary(json: String): Boolean {
+        val naviDict = mutableMapOf<String, Navi>()
+        try {
+            val dictIntermediate =
+                jsonFormat.decodeFromString<Map<String, NaviIntermediate>>(json)
+            for (intermediate in dictIntermediate) {
+                naviDict[intermediate.key] = Navi.create(intermediate.value)
             }
-
-            dictionary = NaviDictionary(naviDict.toMap())
+        } catch (e: Exception) {
+            Log.wtf("REYKUNYU", e)
+            return false
         }
-        Log.i("REYKUNYU", "Parsed the json and created the Na'vi dictionary in $time ms!")
+
+        dictionary = NaviDictionary(naviDict.toMap())
         return true
     }
 
