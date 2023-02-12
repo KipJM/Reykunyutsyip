@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,6 +28,7 @@ import com.kip.reykunyu.viewmodels.OfflineDictionaryViewModel
 
 //The class for the main dictionary UI
 @OptIn(ExperimentalMaterial3Api::class)
+@Preview
 @Composable
 fun DictionaryScreen(
     offlineDictViewModel: OfflineDictionaryViewModel = viewModel(),
@@ -36,14 +37,19 @@ fun DictionaryScreen(
     val focusManager = LocalFocusManager.current
     val dictState = offlineDictViewModel.offlineDictState
 
+    val onSearch = {
+        focusManager.clearFocus()
+        searchViewModel.search()
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        "Reykunyu",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                    DictionarySearchBar(
+                        searchString = searchViewModel.searchInput,
+                        onInputChanged = {searchViewModel.updateSearchInput(it)},
+                        onSearch = onSearch
                     )
                 },
                 navigationIcon = {
@@ -51,6 +57,15 @@ fun DictionaryScreen(
                         Icon(
                             imageVector = Icons.Filled.Menu,
                             contentDescription = "Reykunyu sidebar menu access"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onSearch ) {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = stringResource(R.string.search_description),
+                            modifier = Modifier.padding(8.dp)
                         )
                     }
                 }
@@ -71,16 +86,8 @@ fun DictionaryScreen(
                         LoadingView()
                     }
                     is OfflineDictState.Loaded -> {
-                        DictionarySearchBar(
-                            searchString = searchViewModel.searchInput,
-                            onInputChanged = {searchViewModel.updateSearchInput(it)},
-                            onSearch = {
-                                focusManager.clearFocus()
-                                searchViewModel.search()
-                            }
-                        )
-                        val searchState = searchViewModel.dictSearchState
-                        when (searchState) {
+
+                        when (val searchState = searchViewModel.dictSearchState) {
                             is DictSearchState.Success -> {
                                 StatusText(text = searchState.result.toNavi.size.toString())
                             }
@@ -152,31 +159,27 @@ fun DictionarySearchBar(
     onSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        //Search bar
-        OutlinedTextField(
-            value = searchString,
-            onValueChange = onInputChanged,
-            trailingIcon = {
-                IconButton(onClick = onSearch ) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = stringResource(R.string.search_description)
-                    )
-                }
-            },
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Search
-            ),
-            keyboardActions = KeyboardActions(
-                onSearch = {onSearch()}
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-        )
-    }
+    //Search bar
+    OutlinedTextField(
+        value = searchString,
+        onValueChange = onInputChanged,
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Search
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = { onSearch() }
+        ),
+        placeholder =
+        {
+            Text(
+                text = stringResource(R.string.search),
+                style = MaterialTheme.typography.titleMedium
+            )
+        },
+        textStyle = MaterialTheme.typography.titleMedium,
+        singleLine = true,
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(32.dp)
+    )
 }
