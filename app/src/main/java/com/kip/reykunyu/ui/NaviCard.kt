@@ -2,6 +2,7 @@
 
 package com.kip.reykunyu.ui
 
+import android.util.Patterns
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.*
@@ -277,16 +278,28 @@ fun RichText(
                         style = style.copy(
                             textDecoration = TextDecoration.Underline
                         ),
-                        onClick = { uriHandler.openUri(component.content) }
+                        onClick = {
+                            if (!component.url.startsWith("http://") &&
+                                !component.url.startsWith("https://")
+                            ) {
+                                uriHandler.openUri("https://" + component.content)
+                            }
+                            else {
+                                uriHandler.openUri(component.content)
+                            }
+                        }
                     )
                 }
                 RichTextComponent.Type.NaviRef -> {
                     NaviReferenceChip(
                         naviUnformatted = component.content,
-                        paddingL = 0.dp,
-                        paddingR = 0.dp,
+                        paddingL = 1.dp,
+                        paddingR = 1.dp,
                         onClick = naviClick
                     )
+                }
+                RichTextComponent.Type.Space -> {
+                    Spacer(modifier = Modifier.padding(2.dp))
                 }
             }
         }
@@ -365,7 +378,19 @@ fun createRichText(text: String): List<RichTextComponent> {
             */
 
             for (words in spaceRegex.split(partition)) {
-                richText.add(RichTextComponent(RichTextComponent.Type.Text, words))
+                if (Patterns.WEB_URL.matcher(words).matches()) {
+                    richText.add(RichTextComponent(
+                        RichTextComponent.Type.Url,
+                        words,
+                        AnnotatedString(text=words)
+                    ))
+                }else {
+                    if (words == " ") {
+                        richText.add(RichTextComponent(RichTextComponent.Type.Space, words))
+                    }else {
+                        richText.add(RichTextComponent(RichTextComponent.Type.Text, words))
+                    }
+                }
             }
         }
     }
@@ -381,7 +406,8 @@ data class RichTextComponent(
     enum class Type {
         Text,
         Url,
-        NaviRef
+        NaviRef,
+        Space
     }
 }
 
@@ -448,9 +474,9 @@ fun NaviCardPreview() {
             listOf("Taronyu's Dictionary 9.661 < Frommer",
                 "https://en.wiktionary.org/wiki/Appendix:Na'vi"),
         ),
-        etymology = "Shortened form of ['eveng:n]. www.wikipedia.com",
+        etymology = "Shortened form of ['eveng:n]. https://www.wikipedia.com",
         infixes = "h.angh.am",
-        meaning_note = "Used together with [zun:conj]. Text huh? fjaosijda osidjoi asdjidos ajdosaijs dodjs",
+        meaning_note = "Used together with [zun:conj]. Check out reykunyu.lu and [skxawng:n]!",
         seeAlso = listOf("oeng:pn", "oe:pn"),
         status = "unconfirmed",
         status_note = "Not yet officially confirmed by Pawl.",
