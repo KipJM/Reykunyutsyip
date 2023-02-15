@@ -313,6 +313,7 @@ fun NaviReferenceChip(
                 style = Typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
             )
         },
+        modifier = Modifier.defaultMinSize(minHeight = 0.dp),
     )
     Spacer(modifier = Modifier.padding(paddingR))
 }
@@ -331,6 +332,8 @@ fun createRichText(text: String): List<RichTextComponent> {
     val naviRegex = """\[.[^\[\]]*\]"""
         .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
+    val spaceRegex = """((?<=[ \n])|(?=[ \n]))"""
+        .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
     // We first split the string based on URL, then based on Na'vi ref.
     // Then we just check whether it's a URL/Na'vi block, and assign the types accordingly
@@ -356,7 +359,14 @@ fun createRichText(text: String): List<RichTextComponent> {
         }
         else {
             //Text
-            richText.add(RichTextComponent(RichTextComponent.Type.Text, partition))
+            /*
+            * TODO: For some reason text won't wrap with the Na'vi chips. For now I'm going to
+            *  force the text to wrap by splitting every word :/
+            */
+
+            for (words in spaceRegex.split(partition)) {
+                richText.add(RichTextComponent(RichTextComponent.Type.Text, words))
+            }
         }
     }
     
@@ -440,7 +450,7 @@ fun NaviCardPreview() {
         ),
         etymology = "Shortened form of ['eveng:n]. www.wikipedia.com",
         infixes = "h.angh.am",
-        meaning_note = "Used together with reykunyu.lu/sampleUrl [zun:conj].",
+        meaning_note = "Used together with [zun:conj]. Text huh? fjaosijda osidjoi asdjidos ajdosaijs dodjs",
         seeAlso = listOf("oeng:pn", "oe:pn"),
         status = "unconfirmed",
         status_note = "Not yet officially confirmed by Pawl.",
