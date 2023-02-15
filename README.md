@@ -1,13 +1,21 @@
 # ReykunyuAndroid
-An android client for Reykunyu dictionary, made with Jetpack compose  
-Made this project for me to learn Android development.  
-This project does not follow Android best standards. oh no  
+An unofficial android client for Reykunyu, the Na'vi dictionary.
 
-# Features
-Online mode with API calls to Reykunyu, goal is to have all the features  
-Offline mode by using a cached dictionary downloaded from reykunyu  
-**MaTeRiAl YoU**
+# Current target features
+Translate from and to Na'vi  
+>  Online mode using Reykunyu API  
+>  Offline mode using a cached Reykunyu dictionary  
+>  Navi Card  
+>>    All text features  
+>>    Na'vi reference link  
+>>    audio  
+>>    images of the cute animals :)  
+>
+>Adaptive UI using Material Design + Material You
 
-# I want to get these to work too VVV
-Google translate-like popup/Share interface for Na'vi text  
-Other cool features :/  
+# Future features(?)
+>Add all the other search functions from Reykunyu  
+>Dictionary history  
+>Google translate-like system-wide translate shortcut to quickly translate Na'vi text in the wild  
+>Study mode  
+>...  
