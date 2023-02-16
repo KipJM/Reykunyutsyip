@@ -5,6 +5,9 @@ package com.kip.reykunyu.ui
 import android.util.Patterns
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -211,7 +214,8 @@ fun NaviCard(navi: Navi) {
             InfoModule(category = "NOTE", content = navi.status_note)
 
 
-
+            //Sources
+            SourcesCard(sources = navi.source)
 
             Spacer(Modifier.padding(6.dp))
         }
@@ -317,7 +321,9 @@ fun NaviReferenceChip(
         .split(':', ignoreCase = true)[0] // Removes the type at the end
     // Example: [skxawng:n] -> skxawng
 
-    Spacer(modifier = Modifier.padding(paddingL))
+    Spacer(modifier = Modifier
+        .padding(horizontal = paddingL)
+        .defaultMinSize(minHeight = 0.dp))
     AssistChip(
         onClick = { onClick(refNavi) },
         label = {
@@ -326,9 +332,13 @@ fun NaviReferenceChip(
                 style = Typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
             )
         },
-        modifier = Modifier.defaultMinSize(minHeight = 0.dp),
+        modifier = Modifier
+            .defaultMinSize(minHeight = 0.dp)
+        ,
     )
-    Spacer(modifier = Modifier.padding(paddingR))
+    Spacer(modifier = Modifier
+        .padding(horizontal = paddingR)
+        .defaultMinSize(minHeight = 0.dp))
 }
 
 @OptIn(ExperimentalTextApi::class)
@@ -339,9 +349,11 @@ fun createRichText(text: String): List<RichTextComponent> {
 
 
     //Na'vi
+    @Suppress("RegExpRedundantEscape")
     val naviSplitRegex = """((?<=\[.[^\[\]]{1,9999}\])|(?=\[.[^\[\]]*\]))"""
         .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
+    @Suppress("RegExpRedundantEscape")
     val naviRegex = """\[.[^\[\]]*\]"""
         .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
@@ -350,8 +362,7 @@ fun createRichText(text: String): List<RichTextComponent> {
 
     // We first split the string based on URL, then based on Na'vi ref.
     // Then we just check whether it's a URL/Na'vi block, and assign the types accordingly
-    var textPartitions = listOf<String>()
-    textPartitions = naviSplitRegex.split(text).toList()
+    val textPartitions = naviSplitRegex.split(text).toList()
 
     for (partition in textPartitions) {
 //        if (urlRegex.matches(partition)) {
@@ -413,6 +424,61 @@ data class RichTextComponent(
 
 //endregion
 
+@Composable
+fun SourcesCard(sources: List<List<String>>?) {
+    if (sources.isNullOrEmpty()) {
+        return
+    }
+
+    Spacer(Modifier.padding(6.dp))
+
+    val sourcesClean = mutableListOf<String>()
+    
+    //Remove random empty elements (List cleanup)
+    for (source in sources) {
+        val sourceClean = source.filter { it.isNotBlank() }
+        
+        if (sourceClean.isNotEmpty()) {
+            sourcesClean += sourceClean
+        }
+    }
+
+    //Collapsable card
+    var expanded by remember { mutableStateOf(false) }
+
+    Card(
+        onClick = {expanded = !expanded},
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp)
+    ) {
+        Column() {
+            //Title
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 20.dp, end = 10.dp)
+            ) {
+                Text(
+                    text = "SOURCES",
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp),
+                )
+                Spacer(Modifier.weight(1f))
+                IconButton(onClick = { expanded = !expanded }) {
+                    if (expanded) {
+                       Icon(Icons.Filled.KeyboardArrowDown, "fold sources")
+                    } else {
+                        Icon(Icons.Filled.KeyboardArrowUp, "expand sources")
+                    }
+                }
+            }
+        }
+    }
+    
+    // either a string describing the source, or an array containing a description and an URL.
+    for (source in sourcesClean) {
+        // TODO
+    }
+}
 
 fun stylePronunciationText(text: String, stressed: Int?): AnnotatedString {
     val builder = AnnotatedString.Builder()
