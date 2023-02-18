@@ -4,6 +4,8 @@ package com.kip.reykunyu.ui
 
 import android.util.Patterns
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -257,6 +259,8 @@ fun InfoModule(
 fun RichText(
     content: String,
     style: TextStyle = Typography.bodyLarge,
+    richText: List<RichTextComponent>? = null,
+    padding: Boolean = true,
     naviClick: (String) -> Unit
 ) {
 
@@ -264,11 +268,12 @@ fun RichText(
     val uriHandler = LocalUriHandler.current
 
     FlowRow(
-        Modifier.padding(horizontal = 20.dp),
+        modifier = if (padding) Modifier.padding(horizontal = 20.dp) else Modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         //Rich Text
-        for (component in createRichText(content)) {
+
+        for (component in richText ?: createRichText(content)) {
             when (component.type) {
                 RichTextComponent.Type.Text -> {
                     Text(
@@ -310,6 +315,7 @@ fun RichText(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NaviReferenceChip(
     naviUnformatted: String,
@@ -341,7 +347,6 @@ fun NaviReferenceChip(
         .defaultMinSize(minHeight = 0.dp))
 }
 
-@OptIn(ExperimentalTextApi::class)
 fun createRichText(text: String): List<RichTextComponent> {
     val richText = mutableListOf<RichTextComponent>()
 
@@ -357,7 +362,8 @@ fun createRichText(text: String): List<RichTextComponent> {
     val naviRegex = """\[.[^\[\]]*\]"""
         .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
-    val spaceRegex = """((?<=[ \n])|(?=[ \n]))"""
+    @Suppress("RegExpRedundantEscape")
+    val spaceRegex = """((?<=[ \n\(])|(?=[ \n\)]))"""
         .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
     // We first split the string based on URL, then based on Na'vi ref.
@@ -425,14 +431,17 @@ data class RichTextComponent(
 //endregion
 
 @Composable
-fun SourcesCard(sources: List<List<String>>?) {
+fun SourcesCard(
+    sources: List<List<String>>?,
+    style: TextStyle = Typography.bodyLarge
+) {
     if (sources.isNullOrEmpty()) {
         return
     }
 
     Spacer(Modifier.padding(6.dp))
 
-    val sourcesClean = mutableListOf<String>()
+    val sourcesClean = mutableListOf<List<String>>()
     
     //Remove random empty elements (List cleanup)
     for (source in sources) {
@@ -452,15 +461,17 @@ fun SourcesCard(sources: List<List<String>>?) {
             .fillMaxWidth()
             .padding(horizontal = 10.dp)
     ) {
-        Column() {
+        Column(
+            modifier = Modifier.padding(start = 20.dp)
+        ) {
             //Title
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 20.dp, end = 10.dp)
+                modifier = Modifier.padding(end = 10.dp)
             ) {
                 Text(
                     text = "SOURCES",
-                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp),
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 18.sp),
                 )
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = { expanded = !expanded }) {
@@ -471,12 +482,55 @@ fun SourcesCard(sources: List<List<String>>?) {
                     }
                 }
             }
+
+            if (expanded) {
+                for ((index, source) in sourcesClean.withIndex()) {
+                    // "either a string describing the source,
+                    // or an array containing a description and an URL." (navi-tsim)
+                    Column(
+                        Modifier.padding(end = 10.dp)
+                    ) {
+                        Row (
+                            Modifier.padding(bottom = 2.dp)
+                        ) {
+                            Text("${index + 1}.",
+                                style = style.copy(fontWeight = FontWeight.Bold)
+                            )
+
+                            // Check if URL with title or just URLs
+                            if (source.size == 2 &&
+                                !Patterns.WEB_URL.matcher(source[0]).matches() &&
+                                Patterns.WEB_URL.matcher(source[1]).matches()
+                            ) {
+                                // URL
+                                RichText(content = "",
+                                    naviClick = { /* UNUSED */ },
+                                    richText = listOf(RichTextComponent(
+                                        RichTextComponent.Type.Url,
+                                        source[1],
+                                        AnnotatedString(text = source[0])
+                                    )),
+                                    padding = false
+                                )
+                            } else {
+                                // Rich Text
+                                Column {
+                                    for (entry in source) {
+                                        RichText(
+                                            content = entry,
+                                            naviClick = {/* TODO */},
+                                            padding = false
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.padding(6.dp))
+                }
+                Spacer(Modifier.padding(3.dp))
+            }
         }
-    }
-    
-    // either a string describing the source, or an array containing a description and an URL.
-    for (source in sourcesClean) {
-        // TODO
     }
 }
 
@@ -519,33 +573,42 @@ fun stylePronunciationText(text: String, stressed: Int?): AnnotatedString {
 @Preview
 @Composable
 fun NaviCardPreview() {
-    NaviCard(
+    val naviList = listOf<Navi>(
         Navi(
-        word = "skxawng",
-        type = "ctr",
-        pronunciation = listOf(
-            Pronunciation(
-                "s-xa-wng-s", stressed = 3,
-                audio = listOf(
-                    Audio("Plumps", "plumps/skxawng:n.mp3"),
-                    Audio("tsyili", "tsyili/skxawng:n.mp3")
+            word = "skxawng",
+            type = "ctr",
+            pronunciation = listOf(
+                Pronunciation(
+                    "s-xa-wng-s", stressed = 3,
+                    audio = listOf(
+                        Audio("Plumps", "plumps/skxawng:n.mp3"),
+                        Audio("tsyili", "tsyili/skxawng:n.mp3")
+                    )
                 )
-            )
-        ),
-        translations = listOf(
-            mapOf(Language.English to "Idiot, moron. a.k.a. Jake Sully")
-        ),
-        source = listOf(
-            listOf("https://en.wiktionary.org/wiki/Appendix:Na'vi", "", ""),
-            listOf("Taronyu's Dictionary 9.661 < Frommer",
-                "https://en.wiktionary.org/wiki/Appendix:Na'vi"),
-        ),
-        etymology = "Shortened form of ['eveng:n]. https://www.wikipedia.com",
-        infixes = "h.angh.am",
-        meaning_note = "Used together with [zun:conj]. Check out reykunyu.lu and [skxawng:n]!",
-        seeAlso = listOf("oeng:pn", "oe:pn"),
-        status = "unconfirmed",
-        status_note = "Not yet officially confirmed by Pawl.",
-        image = "toruk.png"
-    ))
+            ),
+            translations = listOf(
+                mapOf(Language.English to "Idiot, moron. a.k.a. Jake Sully")
+            ),
+            source = listOf(
+                listOf("https://en.wiktionary.org/wiki/Appendix:Na'vi", "", ""),
+                listOf("Taronyu's Dictionary 9.661 < Frommer",
+                    "https://en.wiktionary.org/wiki/Appendix:Na'vi"),
+                listOf("here's some text. (https://en.wiktionary.org/wiki/Appendix:Na'vi)",
+                    "also, here's reykunyu.lu",
+                    "Frommer"),
+            ),
+            etymology = "Shortened form of ['eveng:n]. https://www.wikipedia.com",
+            infixes = "h.angh.am",
+            meaning_note = "Used together with [zun:conj]. Check out reykunyu.lu and [skxawng:n]!",
+            seeAlso = listOf("oeng:pn", "oe:pn"),
+            status = "unconfirmed",
+            status_note = "Not yet officially confirmed by Pawl.",
+            image = "toruk.png"
+        )
+    )
+    LazyColumn {
+        items(items = naviList) { item ->
+            NaviCard(item)
+        }
+    }
 }
