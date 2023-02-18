@@ -2,7 +2,9 @@
 
 package com.kip.reykunyu.ui
 
+import android.net.Uri
 import android.util.Patterns
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,7 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.*
@@ -265,7 +267,7 @@ fun RichText(
 ) {
 
     //URL
-    val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
 
     FlowRow(
         modifier = if (padding) Modifier.padding(horizontal = 20.dp) else Modifier,
@@ -288,14 +290,19 @@ fun RichText(
                             textDecoration = TextDecoration.Underline
                         ),
                         onClick = {
-                            if (!component.url.startsWith("http://") &&
-                                !component.url.startsWith("https://")
-                            ) {
-                                uriHandler.openUri("https://" + component.content)
+                            val builder = CustomTabsIntent.Builder()
+                            val customTabsIntent = builder.build()
+
+                            //Contains https and http
+                            val url = if (component.content.contains("http")) {
+                                component.content
+                            } else {
+                                "https://" + component.content
                             }
-                            else {
-                                uriHandler.openUri(component.content)
-                            }
+
+                            // Launch in browser-in-app
+                            customTabsIntent.launchUrl(context,
+                                Uri.parse(url))
                         }
                     )
                 }
@@ -339,8 +346,7 @@ fun NaviReferenceChip(
             )
         },
         modifier = Modifier
-            .defaultMinSize(minHeight = 0.dp)
-        ,
+            .defaultMinSize(minHeight = 0.dp),
     )
     Spacer(modifier = Modifier
         .padding(horizontal = paddingR)
