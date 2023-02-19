@@ -5,6 +5,10 @@ package com.kip.reykunyu.ui
 import android.net.Uri
 import android.util.Patterns
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,7 +36,9 @@ import com.kip.reykunyu.data.dict.*
 import com.kip.reykunyu.ui.theme.Typography
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
+    ExperimentalAnimationApi::class
+)
 @Composable
 fun NaviCard(navi: Navi) {
     val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
@@ -62,20 +68,23 @@ fun NaviCard(navi: Navi) {
                     }
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
                     ){
-                        if (showTypeInfo) {
-                            Text(
-                                text = stringResource(id = navi.typeDetails()),
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                        }else {
-                            Text(
-                                text = navi.typeDisplay(),
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                        AnimatedContent(targetState = showTypeInfo) { show ->
+                            if (show) {
+                                Text(
+                                    text = stringResource(id = navi.typeDetails()),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                            }else {
+                                Text(
+                                    text = navi.typeDisplay(),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
                         }
                     }
                 }
@@ -490,6 +499,7 @@ fun SourcesCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 10.dp)
+            .animateContentSize()
     ) {
         Column(
             modifier = Modifier.padding(start = 20.dp)
@@ -513,52 +523,58 @@ fun SourcesCard(
                 }
             }
 
-            if (expanded) {
-                for ((index, source) in sourcesClean.withIndex()) {
-                    // "either a string describing the source,
-                    // or an array containing a description and an URL." (navi-tsim)
-                    Column(
-                        Modifier.padding(end = 10.dp)
-                    ) {
-                        Row (
-                            Modifier.padding(bottom = 2.dp)
+            AnimatedVisibility(visible = expanded) {
+                Column (Modifier.animateContentSize()) {
+                    for ((index, source) in sourcesClean.withIndex()) {
+                        // "either a string describing the source,
+                        // or an array containing a description and an URL." (navi-tsim)
+                        Column(
+                            Modifier.padding(end = 10.dp)
                         ) {
-                            Text("${index + 1}.",
-                                style = style.copy(fontWeight = FontWeight.Bold)
-                            )
-
-                            // Check if URL with title or just URLs
-                            if (source.size == 2 &&
-                                !Patterns.WEB_URL.matcher(source[0]).matches() &&
-                                Patterns.WEB_URL.matcher(source[1]).matches()
+                            Row(
+                                Modifier.padding(bottom = 2.dp)
                             ) {
-                                // URL
-                                RichText(content = "",
-                                    naviClick = { /* UNUSED */ },
-                                    richText = listOf(RichTextComponent(
-                                        RichTextComponent.Type.Url,
-                                        source[1],
-                                        AnnotatedString(text = source[0])
-                                    )),
-                                    padding = false
+                                Text(
+                                    "${index + 1}.",
+                                    style = style.copy(fontWeight = FontWeight.Bold)
                                 )
-                            } else {
-                                // Rich Text
-                                Column {
-                                    for (entry in source) {
-                                        RichText(
-                                            content = entry,
-                                            naviClick = {/* TODO */},
-                                            padding = false
-                                        )
+
+                                // Check if URL with title or just URLs
+                                if (source.size == 2 &&
+                                    !Patterns.WEB_URL.matcher(source[0]).matches() &&
+                                    Patterns.WEB_URL.matcher(source[1]).matches()
+                                ) {
+                                    // URL
+                                    RichText(
+                                        content = "",
+                                        naviClick = { /* UNUSED */ },
+                                        richText = listOf(
+                                            RichTextComponent(
+                                                RichTextComponent.Type.Url,
+                                                source[1],
+                                                AnnotatedString(text = source[0])
+                                            )
+                                        ),
+                                        padding = false
+                                    )
+                                } else {
+                                    // Rich Text
+                                    Column {
+                                        for (entry in source) {
+                                            RichText(
+                                                content = entry,
+                                                naviClick = {/* TODO */ },
+                                                padding = false
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
+                        Spacer(Modifier.padding(6.dp))
                     }
-                    Spacer(Modifier.padding(6.dp))
+                    Spacer(Modifier.padding(3.dp))
                 }
-                Spacer(Modifier.padding(3.dp))
             }
         }
     }
