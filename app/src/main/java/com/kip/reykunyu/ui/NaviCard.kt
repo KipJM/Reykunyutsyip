@@ -166,29 +166,13 @@ fun NaviCard(navi: Navi) {
             //meaning note
             if (navi.meaning_note != null) {
                 RichText(content = navi.meaning_note, naviClick = {/*TODO*/})
-                Spacer(Modifier.padding(2.dp))
             }
+
+            AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
+
 
             //etymology
             InfoModule(category = "ETYMOLOGY", content = navi.etymology)
-
-            //Infixes
-            if (navi.infixes != null) {
-                Spacer(Modifier.padding(6.dp))
-                Text(
-                    text = "INFIXES",
-                    style = labelLarge,
-                    modifier = Modifier.padding(horizontal = 20.dp)
-                )
-
-                Text(
-                    text = navi.infixes.replace('.', '·'),
-                    style = Typography.bodyLarge,
-                    modifier = Modifier
-                        .padding(horizontal = 20.dp)
-                )
-
-            }
 
             //See also
             if (navi.seeAlso != null) {
@@ -210,13 +194,36 @@ fun NaviCard(navi: Navi) {
             }
 
 
+            AutoSpacer(navi.etymology, navi.seeAlso, divider = false)
+
+
+            //Infixes
+            if (navi.infixes != null) {
+                Spacer(Modifier.padding(6.dp))
+                Text(
+                    text = "INFIXES",
+                    style = labelLarge,
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+
+                Text(
+                    text = navi.infixes.replace('.', '·'),
+                    style = Typography.bodyLarge,
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp)
+                )
+            }
+
+            AutoSpacer(navi.infixes, padding = 8.dp)
+
             //status
             InfoModule(category = "STATUS", content = navi.status?.uppercase(),
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black))
 
             //statusNote
-            InfoModule(category = "NOTE", content = navi.status_note)
+            InfoModule(category = "NOTE", content = navi.status_note, padding = 3.dp)
 
+            AutoSpacer(navi.status, navi.status_note, padding = 3.dp, divider = false)
 
             //Sources
             SourcesCard(sources = navi.source)
@@ -234,6 +241,7 @@ fun InfoModule(
     category: String,
     content: String?,
     style: TextStyle = Typography.bodyLarge,
+    padding: Dp = 8.dp,
     naviClick: (String) -> Unit = {}
 ) {
     val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
@@ -241,7 +249,7 @@ fun InfoModule(
         return
     }
 
-    Spacer(Modifier.padding(6.dp))
+    Spacer(Modifier.padding(padding))
     Text(
         text = category.uppercase(),
         style = labelLarge,
@@ -254,6 +262,22 @@ fun InfoModule(
         naviClick = naviClick
     )
 }
+
+@Composable
+fun <T> AutoSpacer(
+    vararg elements: T,
+    padding: Dp = 5.dp,
+    divider: Boolean = true
+) {
+    if (elements.any{x -> x != null}) {
+        Spacer(Modifier.padding(padding * .7f))
+        if (divider) {
+            Divider(modifier = Modifier.padding(horizontal = 20.dp))
+        }
+        Spacer(Modifier.padding(padding * .3f))
+    }
+}
+
 
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -605,7 +629,7 @@ fun NaviCardPreview() {
             ),
             etymology = "Shortened form of ['eveng:n]. https://www.wikipedia.com",
             infixes = "h.angh.am",
-            meaning_note = "Used together with [zun:conj]. Check out reykunyu.lu and [skxawng:n]!",
+            meaning_note = null/*"Used together with [zun:conj]. Check out reykunyu.lu and [skxawng:n]!"*/,
             seeAlso = listOf("oeng:pn", "oe:pn"),
             status = "unconfirmed",
             status_note = "Not yet officially confirmed by Pawl.",
