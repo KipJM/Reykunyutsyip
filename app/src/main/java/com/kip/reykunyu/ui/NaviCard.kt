@@ -1,8 +1,9 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.kip.reykunyu.ui
 
 import android.net.Uri
+import android.util.Log
 import android.util.Patterns
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.AnimatedContent
@@ -40,7 +41,7 @@ import com.kip.reykunyu.ui.theme.Typography
     ExperimentalAnimationApi::class
 )
 @Composable
-fun NaviCard(navi: Navi) {
+fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
     val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
     ElevatedCard(
         modifier = Modifier
@@ -53,7 +54,7 @@ fun NaviCard(navi: Navi) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(horizontal = 17.dp, vertical = 7.dp)
             ) {
-                //Navi
+                //Na'vi
                 Text(
                     text = navi.word,
                     style = Typography.titleLarge
@@ -77,12 +78,14 @@ fun NaviCard(navi: Navi) {
                                     text = stringResource(id = navi.typeDetails()),
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
-                                    style = MaterialTheme.typography.titleSmall
+                                    style = MaterialTheme.typography.displaySmall
+                                        .copy(fontSize = 20.sp)
                                 )
                             }else {
                                 Text(
                                     text = navi.typeDisplay(),
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.displaySmall
+                                        .copy(fontSize = 20.sp)
                                 )
                             }
                         }
@@ -174,14 +177,14 @@ fun NaviCard(navi: Navi) {
 
             //meaning note
             if (navi.meaning_note != null) {
-                RichText(content = navi.meaning_note, naviClick = {/*TODO*/})
+                RichText(content = navi.meaning_note, naviClick = naviClick)
             }
 
             AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
 
 
             //etymology
-            InfoModule(category = "ETYMOLOGY", content = navi.etymology)
+            InfoModule(category = "ETYMOLOGY", content = navi.etymology, naviClick = naviClick)
 
             //See also
             if (navi.seeAlso != null) {
@@ -196,7 +199,7 @@ fun NaviCard(navi: Navi) {
                     Modifier.padding(horizontal = 20.dp)
                 ) {
                     for (refNavi in navi.seeAlso) {
-                        NaviReferenceChip(naviUnformatted = refNavi, onClick = {/*TODO*/},
+                        NaviReferenceChip(naviUnformatted = refNavi, onClick = naviClick,
                             paddingR = 10.dp)
                     }
                 }
@@ -227,15 +230,18 @@ fun NaviCard(navi: Navi) {
 
             //status
             InfoModule(category = "STATUS", content = navi.status?.uppercase(),
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black))
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
+                naviClick = naviClick
+            )
 
             //statusNote
-            InfoModule(category = "NOTE", content = navi.status_note, padding = 3.dp)
+            InfoModule(category = "NOTE", content = navi.status_note, padding = 3.dp,
+                naviClick = naviClick)
 
             AutoSpacer(navi.status, navi.status_note, padding = 3.dp, divider = false)
 
             //Sources
-            SourcesCard(sources = navi.source)
+            SourcesCard(sources = navi.source, naviClick = naviClick)
 
             Spacer(Modifier.padding(6.dp))
         }
@@ -251,7 +257,7 @@ fun InfoModule(
     content: String?,
     style: TextStyle = Typography.bodyLarge,
     padding: Dp = 8.dp,
-    naviClick: (String) -> Unit = {}
+    naviClick: (String) -> Unit
 ) {
     val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
     if (content == null) {
@@ -320,7 +326,8 @@ fun RichText(
                     ClickableText(
                         text = component.url!!,
                         style = style.copy(
-                            textDecoration = TextDecoration.Underline
+                            textDecoration = TextDecoration.Underline,
+                            color = MaterialTheme.colorScheme.onPrimary
                         ),
                         onClick = {
                             val builder = CustomTabsIntent.Builder()
@@ -371,7 +378,10 @@ fun NaviReferenceChip(
         .padding(horizontal = paddingL)
         .defaultMinSize(minHeight = 0.dp))
     AssistChip(
-        onClick = { onClick(refNavi) },
+        onClick = {
+            Log.i("REYKUNYU", "Na'vi card clicked! $refNavi")
+            onClick(refNavi)
+                  },
         label = {
             Text(
                 text = refNavi,
@@ -469,10 +479,12 @@ data class RichTextComponent(
 
 //endregion
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SourcesCard(
     sources: List<List<String>>?,
-    style: TextStyle = Typography.bodyLarge
+    style: TextStyle = Typography.bodyLarge,
+    naviClick: (String) -> Unit
 ) {
     if (sources.isNullOrEmpty()) {
         return
@@ -563,7 +575,7 @@ fun SourcesCard(
                                         for (entry in source) {
                                             RichText(
                                                 content = entry,
-                                                naviClick = {/* TODO */ },
+                                                naviClick = naviClick,
                                                 padding = false
                                             )
                                         }
@@ -654,7 +666,7 @@ fun NaviCardPreview() {
     )
     LazyColumn {
         items(items = naviList) { item ->
-            NaviCard(item)
+            NaviCard(item, {})
         }
     }
 }

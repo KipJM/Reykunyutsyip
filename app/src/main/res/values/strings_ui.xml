@@ -16,6 +16,7 @@
 
     <!-- UI -->
     <string name="search">Search..</string>
+    <string name="string_help">Type Na\'vi or your preferred language in the search bar to search</string>
 
 
 </resources>
