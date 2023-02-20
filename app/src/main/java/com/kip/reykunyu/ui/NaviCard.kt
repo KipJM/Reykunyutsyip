@@ -50,14 +50,18 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
     ) {
         Column {
             //Navi + Info
-            Row(
+            FlowRow(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(horizontal = 17.dp, vertical = 7.dp)
             ) {
+
                 //Na'vi
+                val textStyleNavi = Typography.titleLarge
                 Text(
                     text = navi.word,
-                    style = Typography.titleLarge
+                    style = textStyleNavi,
+                    /*modifier = Modifier
+                        .widthIn(min = 0.dp, max = 220.dp)*/
                 )
 
                 // WordType
@@ -327,7 +331,7 @@ fun RichText(
                         text = component.url!!,
                         style = style.copy(
                             textDecoration = TextDecoration.Underline,
-                            color = MaterialTheme.colorScheme.onPrimary
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         ),
                         onClick = {
                             val builder = CustomTabsIntent.Builder()
@@ -633,7 +637,7 @@ fun stylePronunciationText(text: String, stressed: Int?): AnnotatedString {
 fun NaviCardPreview() {
     val naviList = listOf<Navi>(
         Navi(
-            word = "skxawng",
+            word = "skxawng skxa wng skxa wng. skxaw ng ì ì",
             type = "ctr",
             pronunciation = listOf(
                 Pronunciation(
