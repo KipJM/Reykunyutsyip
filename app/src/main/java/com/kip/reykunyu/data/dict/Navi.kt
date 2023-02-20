@@ -17,7 +17,8 @@ enum class Language(@StringRes val display: Int, private val requestCode: String
     Polish(R.string.polish, "pl"),
     Russian(R.string.russian, "ru"),
     Swedish(R.string.swedish, "sv"),
-    Navi(R.string.navi, "x-navi");
+    Navi(R.string.navi, "x-navi"),
+    Unknown(R.string.lang_unknown, "");
 
     override fun toString(): String {
         return requestCode
@@ -172,12 +173,14 @@ data class Navi(
             }
 
             //Translations
-            var translations = mutableListOf<Map<Language, String>>()
+            val translations = mutableListOf<Map<Language, String>>()
             for (translationColumn in intermediate.translations) {
-                var column = mutableMapOf<Language, String>()
+                val column = mutableMapOf<Language, String>()
                 for (translationItem in translationColumn) {
                     column[
-                            Language.fromCode(translationItem.key) ?: Language.English
+                            Language.fromCode(translationItem.key) ?:
+                            if(translationItem.key.lowercase().contains("navi")) //Json is a bit funky
+                                Language.Navi else Language.Unknown
                     ] = translationItem.value
                 }
                 translations.add(column.toMap())
