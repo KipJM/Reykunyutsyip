@@ -11,8 +11,8 @@ enum class SearchResultStatus{
 
 data class TranslateSearchResult(
     val status: SearchResultStatus,
-    val fromNavi: List<Navi>,
-    val toNavi: List<Navi>
+    val fromNavi: List<Navi>, //Sort by relevance
+    val toNavi: List<Navi> //Sort by relevance
 )
 
 interface TranslateSearchProvider{
