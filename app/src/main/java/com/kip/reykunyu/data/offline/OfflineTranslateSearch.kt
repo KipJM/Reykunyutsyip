@@ -1,17 +1,13 @@
 package com.kip.reykunyu.data.offline
 
-import com.kip.reykunyu.data.api.ResponseStatus
-import com.kip.reykunyu.data.dict.Language
-import com.kip.reykunyu.data.dict.Navi
-import com.kip.reykunyu.data.dict.TranslateSearchProvider
-import com.kip.reykunyu.data.dict.TranslateSearchResult
+import com.kip.reykunyu.data.dict.*
 
 class OfflineTranslateSearch : TranslateSearchProvider {
 
     override suspend fun search(query: String, language: Language): TranslateSearchResult {
         if (OfflineDictionary.dictionary == null) {
             //Cancels search if dictionary is not here. This (hopefully) should be unreachable code!
-            return TranslateSearchResult(ResponseStatus.Error, emptyList(), emptyList())
+            return TranslateSearchResult(SearchResultStatus.Error, emptyList(), emptyList())
         }
 
         // Na'vi=> search
@@ -22,7 +18,7 @@ class OfflineTranslateSearch : TranslateSearchProvider {
         val toNaviResults = OfflineDictionary.safeDictionary
             .dictionary.filterValues {translationsSimilarity(it, query, language)}.values.toList()
 
-        return TranslateSearchResult(ResponseStatus.Success, fromNaviResults, toNaviResults)
+        return TranslateSearchResult(SearchResultStatus.Success, fromNaviResults, toNaviResults)
     }
 
     private fun stringSimilarity(candidate: String, target: String): Boolean {

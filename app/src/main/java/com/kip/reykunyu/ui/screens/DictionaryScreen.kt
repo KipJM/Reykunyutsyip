@@ -20,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,6 +30,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -106,7 +108,9 @@ fun DictionaryScreen(
                         offlineDictViewModel.downloadDictionary()
                     }
                     is OfflineDictState.Loading -> {
-                        LoadingView()
+                        LoadingView(
+                            text = stringResource(R.string.downloading_dict)
+                        )
                     }
                     is OfflineDictState.Loaded -> {
                         AnimatedContent(targetState = searchViewModel.dictSearchState)
@@ -123,15 +127,19 @@ fun DictionaryScreen(
                                         }
                                     )
                                 }
-                                DictSearchState.Error -> StatusText(text = "ERROR!")
-                                DictSearchState.Loading -> LoadingView()
-                                DictSearchState.Standby -> StandbyHelpView()
+                                DictSearchState.Error -> IconInfoView(text = stringResource(R.string.error))
+                                DictSearchState.Loading -> LoadingView(text = stringResource(id = R.string.loading))
+                                DictSearchState.Standby -> IconInfoView(
+                                    text = stringResource(id = R.string.search_help)
+                                ) {
+                                    Icon(Icons.Rounded.Search, null, modifier = it)
+                                }
                             }
                         }
 
                     }
                     is OfflineDictState.Error -> {
-                        StatusText(text = "ERROR!")
+                        IconInfoView(text = stringResource(R.string.error))
                     }
                 }
             }
@@ -162,48 +170,38 @@ fun DownloadDictionaryButton(
 }
 
 @Composable
-fun LoadingView() {
-    Column(
-        Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+fun LoadingView(text: String) {
+    IconInfoView(
+        text = text
     ) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(
+            strokeWidth = 13.dp,
+            strokeCap = StrokeCap.Round,
+            modifier = it
+        )
+        Spacer(Modifier.padding(15.dp))
     }
 }
 
 @Composable
-fun StandbyHelpView() {
+fun IconInfoView(text: String, icon: (@Composable (Modifier) -> Unit)? = null) {
     Column(
         Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(Icons.Rounded.Search, null,
-            modifier = Modifier
+        icon?.invoke(
+            Modifier
                 .size(200.dp)
-                .padding(0.dp)
         )
         Text(
-            text = stringResource(R.string.string_help),
+            text = text,
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 40.dp, vertical = 5.dp)
         )
         Spacer(Modifier.padding(60.dp))
     }
-}
-
-
-@Composable
-fun StatusText(
-    text: String,
-    modifier: Modifier = Modifier
-){
-    Text(
-        text = text,
-        modifier = modifier
-    )
 }
 
 
@@ -265,7 +263,7 @@ fun SearchDisplay(fromNavi: List<Navi>, toNavi: List<Navi>, naviAction: (String)
             }
         }
 
-        HorizontalPager(pageCount = 2, state = state) {
+        HorizontalPager(pageCount = 2, state = state, pageSpacing = 1.dp) {
             when (state.currentPage) {
                 0 -> NaviList(naviList = fromNavi, naviAction = { naviAction(it) })
                 1 -> NaviList(naviList = toNavi, naviAction = { naviAction(it) })
@@ -276,13 +274,30 @@ fun SearchDisplay(fromNavi: List<Navi>, toNavi: List<Navi>, naviAction: (String)
 
 @Composable
 fun NaviList(naviList: List<Navi>, naviAction: (String) -> Unit) {
+
+    if(naviList.isEmpty()) {
+        IconInfoView(text = stringResource(R.string.results_empty)) {
+            Icon(Icons.Rounded.Info, null, modifier = it)
+        }
+        return
+    }
+
     val state: LazyListState = rememberLazyListState()
     LazyColumn(
         state = state,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.simpleVerticalScrollbar(state)
     ) {
         items(naviList) {item ->
             NaviCard(navi = item, naviClick = { naviAction(it) })
+        }
+
+        item{
+            Text(
+                text = stringResource(R.string.end_of_list),
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Spacer(Modifier.padding(5.dp))
         }
     }
 }

@@ -1,10 +1,16 @@
 package com.kip.reykunyu.data.dict
 
-import com.kip.reykunyu.data.api.ResponseStatus
 import com.kip.reykunyu.data.offline.OfflineTranslateSearch
 
+enum class SearchResultStatus{
+    Standby,
+    Loading,
+    Success,
+    Error
+}
+
 data class TranslateSearchResult(
-    val status: ResponseStatus,
+    val status: SearchResultStatus,
     val fromNavi: List<Navi>,
     val toNavi: List<Navi>
 )
@@ -25,8 +31,9 @@ object UniversalSearchRepository: DictionarySearchRepository {
 //    private val onlineTranslateSearchProvider: TranslateSearchProvider = TODO()
 
     override suspend fun search(query: String): TranslateSearchResult {
-        if (query == "") {
-            return TranslateSearchResult(status = ResponseStatus.Success, emptyList(), emptyList())
+        if (query.isBlank()) {
+            return TranslateSearchResult(
+                status = SearchResultStatus.Standby, emptyList(), emptyList())
         }
 
         return when (offlineMode) {
@@ -38,7 +45,8 @@ object UniversalSearchRepository: DictionarySearchRepository {
                 //Online
                 //onlineTranslateSearchProvider.search(query, language)
                 //TODO
-                return TranslateSearchResult(status = ResponseStatus.Error, emptyList(), emptyList())
+                return TranslateSearchResult(status = SearchResultStatus.Error,
+                    emptyList(), emptyList())
             }
         }
     }

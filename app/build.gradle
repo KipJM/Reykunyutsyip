@@ -97,4 +97,7 @@ dependencies {
     //WEB BROWSER
     implementation "androidx.browser:browser:1.5.0"
 
+    //SEARCH ALGORITHM
+    implementation "me.xdrop:fuzzywuzzy:1.4.0"
+
 }

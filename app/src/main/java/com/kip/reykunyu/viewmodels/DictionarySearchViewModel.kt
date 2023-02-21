@@ -5,13 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kip.reykunyu.data.api.ResponseStatus
+import com.kip.reykunyu.data.dict.SearchResultStatus
 import com.kip.reykunyu.data.dict.TranslateSearchResult
 import com.kip.reykunyu.data.dict.UniversalSearchRepository
 import kotlinx.coroutines.launch
 
 sealed interface DictSearchState {
-    object Standby : DictSearchState //Only used for initialization.
+    object Standby : DictSearchState
     object Loading : DictSearchState
     data class Success(val result: TranslateSearchResult) : DictSearchState
     object Error : DictSearchState
@@ -38,12 +38,18 @@ class DictionarySearchViewModel: ViewModel() {
         viewModelScope.launch {
             val response = UniversalSearchRepository.search(searchInput)
             dictSearchState = when (response.status) {
-                ResponseStatus.Success -> {
+                SearchResultStatus.Success -> {
                     DictSearchState.Success(response)
                 }
 
-                ResponseStatus.Error -> {
+                SearchResultStatus.Error -> {
                     DictSearchState.Error
+                }
+                SearchResultStatus.Standby -> {
+                    DictSearchState.Standby
+                }
+                SearchResultStatus.Loading -> {
+                    DictSearchState.Standby
                 }
             }
         }
