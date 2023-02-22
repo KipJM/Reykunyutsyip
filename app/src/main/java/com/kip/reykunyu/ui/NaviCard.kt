@@ -10,6 +10,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -42,8 +43,17 @@ import com.kip.reykunyu.ui.theme.Typography
 )
 @Composable
 fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
+    val expandable = !navi.seeAlso.isNullOrEmpty() || !navi.pronunciation.isNullOrEmpty() ||
+                !navi.status_note.isNullOrEmpty() || !navi.status.isNullOrEmpty() ||
+                !navi.meaning_note.isNullOrEmpty() || !navi.etymology.isNullOrEmpty() ||
+                !navi.image.isNullOrEmpty() || !navi.infixes.isNullOrEmpty() ||
+                !navi.source.isNullOrEmpty()
+
+    var expanded by remember { mutableStateOf(false)} //expanded
+
     val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
     ElevatedCard(
+        onClick = {if(expandable) expanded = !expanded},
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
@@ -98,54 +108,57 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
             }
 
             //Pronunciation
-            if (navi.pronunciation != null) {
-                for (pronunciation in navi.pronunciation) {
-                    Row(modifier = Modifier.padding(horizontal = 20.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        //syllables
-                        Text(
-                            text = "(",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontSize = 18.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = stylePronunciationText(
-                                pronunciation.syllables, pronunciation.stressed
-                            ),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontSize = 20.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = ")",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontSize = 18.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            AnimatedVisibility(visible = expanded) {
+                if (navi.pronunciation != null) {
+                    for (pronunciation in navi.pronunciation) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            //syllables
+                            Text(
+                                text = "(",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontSize = 18.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = stylePronunciationText(
+                                    pronunciation.syllables, pronunciation.stressed
+                                ),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontSize = 20.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = ")",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontSize = 18.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
 
-                        //Audio players
-                        if ((pronunciation.audio?.size ?: 0) > 0) {
-                            Spacer(modifier = Modifier.weight(1f))
-                            for (audio in pronunciation.audio!!) {
-                                AssistChip(
-                                    onClick = {/* TODO */},
-                                    label = {
-                                        Text(
-                                            text = audio.speaker,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            painterResource(id = R.drawable.baseline_speaker_24),
-                                            contentDescription = "Play audio by ${audio.speaker}",
-                                            Modifier.size(AssistChipDefaults.IconSize)
-                                        )
-                                    }
-                                )
-                                Spacer(modifier = Modifier.weight(.1f))
+                            //Audio players
+                            if ((pronunciation.audio?.size ?: 0) > 0) {
+                                Spacer(modifier = Modifier.weight(1f))
+                                for (audio in pronunciation.audio!!) {
+                                    AssistChip(
+                                        onClick = {/* TODO */ },
+                                        label = {
+                                            Text(
+                                                text = audio.speaker,
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                painterResource(id = R.drawable.baseline_speaker_24),
+                                                contentDescription = "Play audio by ${audio.speaker}",
+                                                Modifier.size(AssistChipDefaults.IconSize)
+                                            )
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.weight(.1f))
+                                }
                             }
                         }
                     }
@@ -179,73 +192,122 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
                 }
             }
 
-            //meaning note
-            if (navi.meaning_note != null) {
-                RichText(content = navi.meaning_note, naviClick = naviClick)
-            }
+            AnimatedVisibility(visible = expanded) {
+                //meaning note
+                if (navi.meaning_note != null) {
+                    RichText(content = navi.meaning_note, naviClick = naviClick)
+                }
 
-            AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
+                AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
 
 
-            //etymology
-            InfoModule(category = "ETYMOLOGY", content = navi.etymology, naviClick = naviClick)
+                //etymology
+                InfoModule(category = "ETYMOLOGY", content = navi.etymology, naviClick = naviClick)
 
-            //See also
-            if (navi.seeAlso != null) {
-                Spacer(Modifier.padding(6.dp))
-                Text(
-                    text = "SEE ALSO",
-                    style = labelLarge,
-                    modifier = Modifier.padding(horizontal = 20.dp)
+                //See also
+                if (navi.seeAlso != null) {
+                    Spacer(Modifier.padding(6.dp))
+                    Text(
+                        text = "SEE ALSO",
+                        style = labelLarge,
+                        modifier = Modifier.padding(horizontal = 20.dp)
+                    )
+
+                    FlowRow(
+                        Modifier.padding(horizontal = 20.dp)
+                    ) {
+                        for (refNavi in navi.seeAlso) {
+                            NaviReferenceChip(
+                                naviUnformatted = refNavi, onClick = naviClick,
+                                paddingR = 10.dp
+                            )
+                        }
+                    }
+                }
+
+
+                AutoSpacer(navi.etymology, navi.seeAlso, divider = false)
+
+
+                //Infixes
+                if (navi.infixes != null) {
+                    Spacer(Modifier.padding(6.dp))
+                    Text(
+                        text = "INFIXES",
+                        style = labelLarge,
+                        modifier = Modifier.padding(horizontal = 20.dp)
+                    )
+
+                    Text(
+                        text = navi.infixes.replace('.', '·'),
+                        style = Typography.bodyLarge,
+                        modifier = Modifier
+                            .padding(horizontal = 20.dp)
+                    )
+                }
+
+                AutoSpacer(navi.infixes, padding = 8.dp)
+
+                //status
+                InfoModule(
+                    category = "STATUS", content = navi.status?.uppercase(),
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
+                    naviClick = naviClick
                 )
 
-                FlowRow(
-                    Modifier.padding(horizontal = 20.dp)
+                //statusNote
+                InfoModule(
+                    category = "NOTE", content = navi.status_note, padding = 3.dp,
+                    naviClick = naviClick
+                )
+
+                AutoSpacer(navi.status, navi.status_note, padding = 3.dp, divider = false)
+
+                //Sources
+                SourcesCard(sources = navi.source, naviClick = naviClick)
+
+            }
+            Spacer(Modifier.padding(6.dp))
+
+
+            //EXPAND AND FOLD BUTTON
+            if(expandable){
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp)
+                        .clickable {
+                            expanded = !expanded
+                            Log.i(
+                                "REYKUNYUFLOOD",
+                                navi.seeAlso.toString() + navi.pronunciation.toString() + navi.status_note.toString() +
+                                        navi.status.toString() + navi.meaning_note.toString() + navi.etymology.toString() +
+                                        navi.image.toString() + navi.infixes.toString() + navi.source.toString()
+                            )
+                        }
                 ) {
-                    for (refNavi in navi.seeAlso) {
-                        NaviReferenceChip(naviUnformatted = refNavi, onClick = naviClick,
-                            paddingR = 10.dp)
+
+                    AnimatedContent(targetState = expanded) { expandState ->
+                        Text(
+                            text = if(!expandState) "VIEW MORE" else "VIEW LESS",
+                            style = labelLarge,
+//                        color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+
+                    AnimatedContent(targetState = expanded) { expandState ->
+                        Icon(
+                            imageVector = if (!expandState)
+                                Icons.Filled.KeyboardArrowUp
+                            else Icons.Filled.KeyboardArrowDown,
+                            contentDescription = null,
+//                        tint = MaterialTheme.colorScheme.tertiary
+                        )
                     }
                 }
             }
 
-
-            AutoSpacer(navi.etymology, navi.seeAlso, divider = false)
-
-
-            //Infixes
-            if (navi.infixes != null) {
-                Spacer(Modifier.padding(6.dp))
-                Text(
-                    text = "INFIXES",
-                    style = labelLarge,
-                    modifier = Modifier.padding(horizontal = 20.dp)
-                )
-
-                Text(
-                    text = navi.infixes.replace('.', '·'),
-                    style = Typography.bodyLarge,
-                    modifier = Modifier
-                        .padding(horizontal = 20.dp)
-                )
-            }
-
-            AutoSpacer(navi.infixes, padding = 8.dp)
-
-            //status
-            InfoModule(category = "STATUS", content = navi.status?.uppercase(),
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
-                naviClick = naviClick
-            )
-
-            //statusNote
-            InfoModule(category = "NOTE", content = navi.status_note, padding = 3.dp,
-                naviClick = naviClick)
-
-            AutoSpacer(navi.status, navi.status_note, padding = 3.dp, divider = false)
-
-            //Sources
-            SourcesCard(sources = navi.source, naviClick = naviClick)
 
             Spacer(Modifier.padding(6.dp))
         }
@@ -467,7 +529,6 @@ fun createRichText(text: String): List<RichTextComponent> {
     
     return richText.toList()
 }
-
 data class RichTextComponent(
     val type: Type,
     val content: String,
