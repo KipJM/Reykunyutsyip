@@ -6,19 +6,36 @@ import com.kip.reykunyu.data.api.ResponseStatus
 import com.kip.reykunyu.data.api.ReykunyuApi
 import com.kip.reykunyu.data.dict.Navi
 import com.kip.reykunyu.data.dict.NaviIntermediate
+import com.kip.reykunyu.data.dict.UniversalSearchRepository
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 data class NaviDictionary (
-    val dictionary: Map<String, Navi>
-    )
+    val dictionary: Map<String, Navi>,
+    val indexedNavi: List<Navi> = dictionary.values.toList(),
+    var indexedTranslations: List<Pair<String, Int>> = listOf()
+    ) {
+
+    //Update indexed translations based on language
+    fun update() {
+        indexedTranslations = mutableListOf()
+        indexedNavi.forEachIndexed{ index, navi ->
+            for (translation in navi.translations) {
+                if (translation[UniversalSearchRepository.language] != null) {
+                    indexedTranslations +=
+                        Pair(translation[UniversalSearchRepository.language]!!, index)
+                }
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalSerializationApi::class)
 object OfflineDictionary {
     var dictionary: NaviDictionary? = null
         private set
-    private val emptyDict: NaviDictionary = NaviDictionary(emptyMap())
+    private val emptyDict: NaviDictionary = NaviDictionary(emptyMap(), emptyList(), emptyList())
 
     /**
      * A null-safe access for the dictionary. Returns an empty dictionary if not loaded. READ ONLY
@@ -63,7 +80,10 @@ object OfflineDictionary {
             return false
         }
 
-        dictionary = NaviDictionary(naviDict.toMap())
+        dictionary = NaviDictionary(naviDict.toMap(), indexedTranslations = mutableListOf())
+        dictionary?.update()
+
+
         return true
     }
 
