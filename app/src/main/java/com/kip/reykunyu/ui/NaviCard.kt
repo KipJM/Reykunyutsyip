@@ -2,14 +2,14 @@
 
 package com.kip.reykunyu.ui
 
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
 import android.util.Patterns
+import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,8 +34,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kip.reykunyu.R
+import com.kip.reykunyu.data.api.AudioImageRepo
 import com.kip.reykunyu.data.dict.*
 import com.kip.reykunyu.ui.theme.Typography
+import com.valentinilk.shimmer.*
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
@@ -141,22 +143,7 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
                             if ((pronunciation.audio?.size ?: 0) > 0) {
                                 Spacer(modifier = Modifier.weight(1f))
                                 for (audio in pronunciation.audio!!) {
-                                    AssistChip(
-                                        onClick = {/* TODO */ },
-                                        label = {
-                                            Text(
-                                                text = audio.speaker,
-                                                style = MaterialTheme.typography.bodyMedium
-                                            )
-                                        },
-                                        leadingIcon = {
-                                            Icon(
-                                                painterResource(id = R.drawable.baseline_speaker_24),
-                                                contentDescription = "Play audio by ${audio.speaker}",
-                                                Modifier.size(AssistChipDefaults.IconSize)
-                                            )
-                                        }
-                                    )
+                                    AudioChip(audio)
                                     Spacer(modifier = Modifier.weight(.1f))
                                 }
                             }
@@ -193,79 +180,84 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
             }
 
             AnimatedVisibility(visible = expanded) {
-                //meaning note
-                if (navi.meaning_note != null) {
-                    RichText(content = navi.meaning_note, naviClick = naviClick)
-                }
+                Column {
+                    //meaning note
+                    if (navi.meaning_note != null) {
+                        RichText(content = navi.meaning_note, naviClick = naviClick)
+                    }
 
-                AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
+                    AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
 
 
-                //etymology
-                InfoModule(category = "ETYMOLOGY", content = navi.etymology, naviClick = naviClick)
-
-                //See also
-                if (navi.seeAlso != null) {
-                    Spacer(Modifier.padding(6.dp))
-                    Text(
-                        text = "SEE ALSO",
-                        style = labelLarge,
-                        modifier = Modifier.padding(horizontal = 20.dp)
+                    //etymology
+                    InfoModule(
+                        category = "ETYMOLOGY",
+                        content = navi.etymology,
+                        naviClick = naviClick
                     )
 
-                    FlowRow(
-                        Modifier.padding(horizontal = 20.dp)
-                    ) {
-                        for (refNavi in navi.seeAlso) {
-                            NaviReferenceChip(
-                                naviUnformatted = refNavi, onClick = naviClick,
-                                paddingR = 10.dp
-                            )
+                    //See also
+                    if (navi.seeAlso != null) {
+                        Spacer(Modifier.padding(6.dp))
+                        Text(
+                            text = "SEE ALSO",
+                            style = labelLarge,
+                            modifier = Modifier.padding(horizontal = 20.dp)
+                        )
+
+                        FlowRow(
+                            Modifier.padding(horizontal = 20.dp)
+                        ) {
+                            for (refNavi in navi.seeAlso) {
+                                NaviReferenceChip(
+                                    naviUnformatted = refNavi, onClick = naviClick,
+                                    paddingR = 10.dp
+                                )
+                            }
                         }
                     }
-                }
 
 
-                AutoSpacer(navi.etymology, navi.seeAlso, divider = false)
+                    AutoSpacer(navi.etymology, navi.seeAlso, divider = false)
 
 
-                //Infixes
-                if (navi.infixes != null) {
-                    Spacer(Modifier.padding(6.dp))
-                    Text(
-                        text = "INFIXES",
-                        style = labelLarge,
-                        modifier = Modifier.padding(horizontal = 20.dp)
+                    //Infixes
+                    if (navi.infixes != null) {
+                        Spacer(Modifier.padding(6.dp))
+                        Text(
+                            text = "INFIXES",
+                            style = labelLarge,
+                            modifier = Modifier.padding(horizontal = 20.dp)
+                        )
+
+                        Text(
+                            text = navi.infixes.replace('.', '·'),
+                            style = Typography.bodyLarge,
+                            modifier = Modifier
+                                .padding(horizontal = 20.dp)
+                        )
+                    }
+
+                    AutoSpacer(navi.infixes, padding = 8.dp)
+
+                    //status
+                    InfoModule(
+                        category = "STATUS", content = navi.status?.uppercase(),
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
+                        naviClick = naviClick
                     )
 
-                    Text(
-                        text = navi.infixes.replace('.', '·'),
-                        style = Typography.bodyLarge,
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
+                    //statusNote
+                    InfoModule(
+                        category = "NOTE", content = navi.status_note, padding = 3.dp,
+                        naviClick = naviClick
                     )
+
+                    Spacer(modifier = Modifier.padding(0.dp))
+
+                    //Sources
+                    SourcesCard(sources = navi.source, naviClick = naviClick)
                 }
-
-                AutoSpacer(navi.infixes, padding = 8.dp)
-
-                //status
-                InfoModule(
-                    category = "STATUS", content = navi.status?.uppercase(),
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
-                    naviClick = naviClick
-                )
-
-                //statusNote
-                InfoModule(
-                    category = "NOTE", content = navi.status_note, padding = 3.dp,
-                    naviClick = naviClick
-                )
-
-                AutoSpacer(navi.status, navi.status_note, padding = 3.dp, divider = false)
-
-                //Sources
-                SourcesCard(sources = navi.source, naviClick = naviClick)
-
             }
             Spacer(Modifier.padding(6.dp))
 
@@ -312,6 +304,84 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
             Spacer(Modifier.padding(6.dp))
         }
     }
+}
+
+@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun AudioChip(audio: Audio) {
+    val context = LocalContext.current
+
+    val mediaPlayer = MediaPlayer()
+    var playing by remember {
+        mutableStateOf(false)
+    }
+    var playRequested by remember {
+        mutableStateOf(false)
+    }
+
+    mediaPlayer.setAudioAttributes(
+        AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .build()
+    )
+    mediaPlayer.setDataSource(context,
+        AudioImageRepo.audioUrl.buildUpon().appendPath(audio.file).build()
+    )
+
+
+    mediaPlayer.setOnErrorListener { mp, what, extra ->
+        Toast.makeText(context, "Failed to play audio!", Toast.LENGTH_SHORT).show()
+        Log.w("REYKUNYU", "ERROR while trying to play audio ${audio.file} " +
+                "($mp: $what, $extra)")
+
+        return@setOnErrorListener true
+    }
+    mediaPlayer.setOnCompletionListener { mp ->
+        playing = false
+        playRequested = false
+    }
+
+    InputChip(
+        onClick = {
+            playRequested = true
+            try {
+                mediaPlayer.prepareAsync()
+                mediaPlayer.setOnPreparedListener { mp ->
+                    mp.start()
+                    playing = true
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to play audio!", Toast.LENGTH_SHORT).show()
+                Log.w(
+                    "REYKUNYU", "ERROR while trying to play audio ${audio.file} " +
+                            "($e)"
+                )
+            }
+
+        },
+        label = {
+            Text(
+                text = audio.speaker,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        leadingIcon = {
+            Icon(
+                painterResource(id = R.drawable.baseline_speaker_24),
+                contentDescription = "Play pronunciation from ${audio.speaker}",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(AssistChipDefaults.IconSize)
+            )
+        },
+        selected = playing,
+        modifier = if (playRequested && !playing) {
+            Modifier.shimmer()
+        } else {
+            Modifier
+        }
+    )
+
+
 }
 
 

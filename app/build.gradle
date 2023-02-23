@@ -100,4 +100,7 @@ dependencies {
     //SEARCH ALGORITHM
     implementation "me.xdrop:fuzzywuzzy:1.4.0"
 
+    //SHIMMER LOADING EFFECT
+    implementation 'com.valentinilk.shimmer:compose-shimmer:1.0.4'
+
 }

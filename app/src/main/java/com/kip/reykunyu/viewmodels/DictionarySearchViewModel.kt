@@ -27,7 +27,6 @@ class DictionarySearchViewModel: ViewModel() {
     var searchInput by mutableStateOf("")
         private set
 
-
     fun updateSearchInput(input: String) {
         searchInput = input
     }

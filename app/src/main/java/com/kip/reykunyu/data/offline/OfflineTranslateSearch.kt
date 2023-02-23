@@ -36,6 +36,9 @@ class OfflineTranslateSearch : TranslateSearchProvider {
             //Starting characters
             var index = 0
             for (character in query) {
+                if (it.first.string.length - 1 < index) {
+                    break
+                }
                 if (it.first.string[index] != character){
                     break
                 }
