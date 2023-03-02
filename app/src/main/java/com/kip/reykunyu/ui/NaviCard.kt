@@ -311,7 +311,6 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
 private fun AudioChip(audio: Audio) {
     val context = LocalContext.current
 
-    val mediaPlayer = MediaPlayer()
     var playing by remember {
         mutableStateOf(false)
     }
@@ -319,37 +318,39 @@ private fun AudioChip(audio: Audio) {
         mutableStateOf(false)
     }
 
-    mediaPlayer.setAudioAttributes(
-        AudioAttributes.Builder()
-            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-            .build()
-    )
-    mediaPlayer.setDataSource(context,
-        AudioImageRepo.audioUrl.buildUpon().appendPath(audio.file).build()
-    )
-
-
-    mediaPlayer.setOnErrorListener { mp, what, extra ->
-        Toast.makeText(context, "Failed to play audio!", Toast.LENGTH_SHORT).show()
-        Log.w("REYKUNYU", "ERROR while trying to play audio ${audio.file} " +
-                "($mp: $what, $extra)")
-
-        return@setOnErrorListener true
-    }
-    mediaPlayer.setOnCompletionListener { mp ->
-        playing = false
-        playRequested = false
-    }
 
     InputChip(
         onClick = {
             playRequested = true
             try {
-                mediaPlayer.prepareAsync()
+                val mediaPlayer = MediaPlayer()
+                mediaPlayer.setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                )
+                mediaPlayer.setDataSource(context,
+                    AudioImageRepo.audioUrl.buildUpon().appendPath(audio.file).build()
+                )
+
+                mediaPlayer.setOnErrorListener { mp, what, extra ->
+                    Toast.makeText(context, "Failed to play audio!", Toast.LENGTH_SHORT).show()
+                    Log.w("REYKUNYU", "ERROR while trying to play audio ${audio.file} " +
+                            "($mp: $what, $extra)")
+
+                    return@setOnErrorListener true
+                }
+                mediaPlayer.setOnCompletionListener { mp ->
+                    playing = false
+                    playRequested = false
+                    mp.release()
+                }
                 mediaPlayer.setOnPreparedListener { mp ->
                     mp.start()
                     playing = true
                 }
+
+                mediaPlayer.prepareAsync()
             } catch (e: Exception) {
                 Toast.makeText(context, "Failed to play audio!", Toast.LENGTH_SHORT).show()
                 Log.w(

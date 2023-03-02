@@ -26,7 +26,7 @@ class OfflineDictionaryViewModel: ViewModel() {
     fun downloadDictionary() {
         offlineDictState = OfflineDictState.Loading
         viewModelScope.launch {
-            val response = OfflineDictionary.download()
+            val response = OfflineDictionary.get()
             offlineDictState =
                 when(response.status) {
                     ResponseStatus.Error -> OfflineDictState.Error

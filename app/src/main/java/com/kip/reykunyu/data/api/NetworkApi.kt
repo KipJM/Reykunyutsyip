@@ -2,8 +2,6 @@ package com.kip.reykunyu.data.api
 
 import com.kip.reykunyu.data.dict.Language
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
@@ -32,7 +30,8 @@ private const val NAVI_SUGGEST =
 
 data class Response<T>(
     val status: ResponseStatus,
-    val content: T? = null
+    val content: T? = null,
+    val message: String? = null
 )
 
 enum class ResponseStatus{

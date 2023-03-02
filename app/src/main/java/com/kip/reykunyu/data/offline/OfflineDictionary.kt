@@ -49,9 +49,10 @@ object OfflineDictionary {
         ignoreUnknownKeys = true
         explicitNulls = false
     }
-    suspend fun download(): Response<NaviDictionary> {
+    suspend fun get(): Response<NaviDictionary> {
         return try {
             val dictJson = ReykunyuApi.getDictionary()
+            Log.i("REYKUNYU", "DICTIONARY DOWNLOADED!")
             if(convertDictionary(json = dictJson)) {
                 Log.i("REYKUNYU", "DICTIONARY LOADED!")
                 Response(ResponseStatus.Success, dictionary)
