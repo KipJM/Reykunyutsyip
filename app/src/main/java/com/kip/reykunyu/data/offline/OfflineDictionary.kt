@@ -55,6 +55,7 @@ object OfflineDictionary {
             Log.i("REYKUNYU", "DICTIONARY DOWNLOADED!")
             if(convertDictionary(json = dictJson)) {
                 Log.i("REYKUNYU", "DICTIONARY LOADED!")
+                Log.i("REYKUNYUFLOOD", "${dictionary?.indexedNavi?.size} words loaded!")
                 Response(ResponseStatus.Success, dictionary)
             } else {
                 Response(ResponseStatus.Error)

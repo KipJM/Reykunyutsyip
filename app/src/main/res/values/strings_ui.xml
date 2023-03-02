@@ -23,6 +23,7 @@
     <string name="error">ERROR!</string>
     <string name="results_empty">No results</string>
     <string name="end_of_list">(end)</string>
+    <string name="image_copyright">Artwork copyright Eana Unil, [TODO! Get permission]</string>
 
 
 </resources>

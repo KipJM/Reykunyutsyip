@@ -22,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -33,6 +34,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.kip.reykunyu.R
 import com.kip.reykunyu.data.api.AudioImageRepo
 import com.kip.reykunyu.data.dict.*
@@ -54,6 +57,8 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false)} //expanded
 
     val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
+
+
     ElevatedCard(
         onClick = {if(expandable) expanded = !expanded},
         modifier = Modifier
@@ -238,7 +243,11 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
                         )
                     }
 
-                    AutoSpacer(navi.infixes, padding = 8.dp)
+                    AutoSpacer(navi.infixes, divider = false)
+
+                    ImageModule(image = navi.image, naviWord = navi.word)
+
+                    AutoSpacer(navi.infixes, navi.image, padding = 8.dp)
 
                     //status
                     InfoModule(
@@ -305,6 +314,9 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
         }
     }
 }
+
+
+//region modules
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -385,36 +397,6 @@ private fun AudioChip(audio: Audio) {
 
 }
 
-
-//region Rich Text
-
-@Composable
-fun InfoModule(
-    category: String,
-    content: String?,
-    style: TextStyle = Typography.bodyLarge,
-    padding: Dp = 8.dp,
-    naviClick: (String) -> Unit
-) {
-    val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
-    if (content == null) {
-        return
-    }
-
-    Spacer(Modifier.padding(padding))
-    Text(
-        text = category.uppercase(),
-        style = labelLarge,
-        modifier = Modifier.padding(horizontal = 20.dp)
-    )
-
-    RichText(
-        content = content,
-        style = style,
-        naviClick = naviClick
-    )
-}
-
 @Composable
 fun <T> AutoSpacer(
     vararg elements: T,
@@ -431,7 +413,111 @@ fun <T> AutoSpacer(
 }
 
 
+@Composable
+fun InfoModule(
+    category: String,
+    content: String?,
+    style: TextStyle = Typography.bodyLarge,
+    padding: Dp = 8.dp,
+    naviClick: (String) -> Unit
+) {
+    if (content == null) {
+        return
+    }
 
+    val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
+    Spacer(Modifier.padding(padding))
+    Text(
+        text = category.uppercase(),
+        style = labelLarge,
+        modifier = Modifier.padding(horizontal = 20.dp)
+    )
+
+    RichText(
+        content = content,
+        style = style,
+        naviClick = naviClick
+    )
+}
+
+@Composable
+fun ImageModule(
+    image: String?,
+    naviWord: String,
+    padding: Dp = 8.dp,
+) {
+    if (image == null) {
+        return
+    }
+
+    val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
+    Spacer(Modifier.padding(padding))
+    Text(
+        text = "IMAGE",
+        style = labelLarge,
+        modifier = Modifier.padding(horizontal = 20.dp)
+    )
+    val context = LocalContext.current
+
+    Card(
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .fillMaxWidth()
+            .aspectRatio(1f),
+        onClick = {
+            Toast.makeText(context, R.string.image_copyright, Toast.LENGTH_SHORT).show()
+        }
+    ) {
+        AsyncImage(
+            model = ImageRequest.Builder(context = LocalContext.current)
+                .data(AudioImageRepo.imageUrl.buildUpon().appendPath(image).build().toString())
+                .crossfade(true)
+                .build(),
+            contentDescription = "A hand drawn illustration of $naviWord.",
+            contentScale = ContentScale.Fit,
+            error = painterResource(id = R.drawable.baseline_broken_image_24),
+            placeholder = painterResource(id = R.drawable.baseline_downloading_24),
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+
+}
+
+fun stylePronunciationText(text: String, stressed: Int?): AnnotatedString {
+    val builder = AnnotatedString.Builder()
+    builder.append(text)
+
+    if (stressed == null)
+        return builder.toAnnotatedString() //Some words don't have stress information. idk
+
+    //"Pronunciations of the word, in which syllable breaks are indicated as dashes." - navi-tsim
+    //index starts at 1.
+    val stressedIndex = stressed - 1
+    val syllables = text.split('-')
+
+    if (syllables.size == 1)
+        return builder.toAnnotatedString() //no underline if only one syllable
+
+    var startIndex = 0
+    for (i in 0 until stressedIndex ) {
+        // index + wordCount
+        // + 1(add dash)
+        startIndex += syllables[i].length + 1
+    }
+
+    //End of the syllable index
+    val endIndex: Int = startIndex + syllables[stressedIndex].length
+
+
+    val stressedStyle = SpanStyle(
+        textDecoration = TextDecoration.Underline
+    )
+    builder.addStyle(stressedStyle, startIndex, endIndex)
+
+    return builder.toAnnotatedString()
+}
+
+//region Rich Text
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RichText(
@@ -629,11 +715,11 @@ fun SourcesCard(
     Spacer(Modifier.padding(6.dp))
 
     val sourcesClean = mutableListOf<List<String>>()
-    
+
     //Remove random empty elements (List cleanup)
     for (source in sources) {
         val sourceClean = source.filter { it.isNotBlank() }
-        
+
         if (sourceClean.isNotEmpty()) {
             sourcesClean += sourceClean
         }
@@ -728,39 +814,6 @@ fun SourcesCard(
     }
 }
 
-fun stylePronunciationText(text: String, stressed: Int?): AnnotatedString {
-    val builder = AnnotatedString.Builder()
-    builder.append(text)
-
-    if (stressed == null)
-        return builder.toAnnotatedString() //Some words don't have stress information. idk
-
-    //"Pronunciations of the word, in which syllable breaks are indicated as dashes." - navi-tsim
-    //index starts at 1.
-    val stressedIndex = stressed - 1
-    val syllables = text.split('-')
-
-    if (syllables.size == 1)
-        return builder.toAnnotatedString() //no underline if only one syllable
-
-    var startIndex = 0
-    for (i in 0 until stressedIndex ) {
-        // index + wordCount
-        // + 1(add dash)
-        startIndex += syllables[i].length + 1
-    }
-
-    //End of the syllable index
-    val endIndex: Int = startIndex + syllables[stressedIndex].length
-
-
-    val stressedStyle = SpanStyle(
-        textDecoration = TextDecoration.Underline
-    )
-    builder.addStyle(stressedStyle, startIndex, endIndex)
-
-    return builder.toAnnotatedString()
-}
 
 
 
