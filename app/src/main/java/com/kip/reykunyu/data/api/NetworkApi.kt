@@ -47,13 +47,13 @@ interface ReykunyuApiService {
     suspend fun getDictionary(): String
 
     @GET(SEARCH)
-    suspend fun search(@Path("QUERY") query: String, @Path("LANG") language: Language): String
+    suspend fun search(@Path("QUERY") query: String, @Path("LANG") language: String): String
 
     @GET(LANG_SUGGEST)
-    suspend fun suggestLang(@Path("QUERY") query: String, @Path("LANG") language: Language): String
+    suspend fun suggestLang(@Path("QUERY") query: String, @Path("LANG") language: String): String
 
     @GET(NAVI_SUGGEST)
-    suspend fun suggestNavi(@Path("QUERY") query: String, @Path("LANG") language: Language): String
+    suspend fun suggestNavi(@Path("QUERY") query: String, @Path("LANG") language: String): String
 
 }
 
@@ -71,5 +71,9 @@ object ReykunyuApi {
 
     suspend fun getDictionary(): String {
         return retrofitService.getDictionary()
+    }
+
+    suspend fun search(query: String, language: Language): String {
+        return retrofitService.search(query, language.toString())
     }
 }

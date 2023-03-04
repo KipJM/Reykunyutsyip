@@ -1,6 +1,7 @@
 package com.kip.reykunyu.data.dict
 
 import com.kip.reykunyu.data.offline.OfflineTranslateSearch
+import com.kip.reykunyu.data.online.OnlineTranslateSearch
 
 enum class SearchResultStatus{
     Standby,
@@ -12,7 +13,8 @@ enum class SearchResultStatus{
 data class TranslateSearchResult(
     val status: SearchResultStatus,
     val fromNavi: List<Navi>, //Sort by relevance
-    val toNavi: List<Navi> //Sort by relevance
+    val toNavi: List<Navi>, //Sort by relevance
+    val info: String? = null
 )
 
 interface TranslateSearchProvider{
@@ -28,7 +30,7 @@ object UniversalSearchRepository: DictionarySearchRepository {
     val language: Language = Language.English
 
     private val offlineTranslateSearchProvider:TranslateSearchProvider = OfflineTranslateSearch()
-//    private val onlineTranslateSearchProvider: TranslateSearchProvider = TODO()
+    private val onlineTranslateSearchProvider: TranslateSearchProvider = OnlineTranslateSearch()
 
     override suspend fun search(query: String): TranslateSearchResult {
         if (query.isBlank()) {
@@ -43,10 +45,7 @@ object UniversalSearchRepository: DictionarySearchRepository {
             }
             false -> {
                 //Online
-                //onlineTranslateSearchProvider.search(query, language)
-                //TODO
-                return TranslateSearchResult(status = SearchResultStatus.Error,
-                    emptyList(), emptyList())
+                onlineTranslateSearchProvider.search(query, language)
             }
         }
     }

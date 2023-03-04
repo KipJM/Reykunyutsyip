@@ -50,19 +50,21 @@ object OfflineDictionary {
         explicitNulls = false
     }
     suspend fun get(): Response<NaviDictionary> {
-        return try {
-            val dictJson = ReykunyuApi.getDictionary()
+        val dictJson: String
+        try {
+            dictJson = ReykunyuApi.getDictionary()
             Log.i("REYKUNYU", "DICTIONARY DOWNLOADED!")
-            if(convertDictionary(json = dictJson)) {
-                Log.i("REYKUNYU", "DICTIONARY LOADED!")
-                Log.i("REYKUNYUFLOOD", "${dictionary?.indexedNavi?.size} words loaded!")
-                Response(ResponseStatus.Success, dictionary)
-            } else {
-                Response(ResponseStatus.Error)
-            }
         } catch (e: Exception) {
             Log.wtf("REYKUNYU", e)
-            Response(ResponseStatus.Error)
+            return Response(ResponseStatus.Error, message = "Download error ($e)")
+        }
+
+        return if(convertDictionary(json = dictJson)) {
+            Log.i("REYKUNYU", "DICTIONARY LOADED!")
+            Log.i("REYKUNYUFLOOD", "${dictionary?.indexedNavi?.size} words loaded!")
+            Response(ResponseStatus.Success, dictionary)
+        } else {
+            Response(ResponseStatus.Error, message = "Loading error")
         }
     }
 
