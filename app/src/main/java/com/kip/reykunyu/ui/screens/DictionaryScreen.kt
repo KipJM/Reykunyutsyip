@@ -241,6 +241,8 @@ fun DictionarySearchBar(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SearchDisplay(fromNavi: List<Navi>, toNavi: List<Navi>, naviAction: (String) -> Unit) {
+
+    // 2 Pages: From Na'vi words and [Language] to Na'vi words
     val initPage = if (fromNavi.isEmpty() && toNavi.isNotEmpty()) { 1 } else { 0 }
 
     val state = rememberPagerState(initialPage = initPage)

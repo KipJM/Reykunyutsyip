@@ -4,21 +4,18 @@ import android.util.Log
 import com.kip.reykunyu.data.api.Response
 import com.kip.reykunyu.data.api.ResponseStatus
 import com.kip.reykunyu.data.api.ReykunyuApi
-import com.kip.reykunyu.data.dict.Navi
-import com.kip.reykunyu.data.dict.NaviIntermediate
 import com.kip.reykunyu.data.dict.UniversalSearchRepository
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 
 data class NaviDictionary (
-    val dictionary: Map<String, Navi>,
-    val indexedNavi: List<Navi> = dictionary.values.toList(),
+    val dictionary: Map<String, DictNavi>,
+    val indexedNavi: List<DictNavi> = dictionary.values.toList(),
     var indexedTranslations: List<Pair<String, Int>> = listOf()
     ) {
 
     //Update indexed translations based on language
-    fun update() {
+    fun updateLang() {
         indexedTranslations = mutableListOf()
         indexedNavi.forEachIndexed{ index, navi ->
             for (translation in navi.translations) {
@@ -44,49 +41,60 @@ object OfflineDictionary {
         get() = dictionary ?: emptyDict
 
 
-    private val jsonFormat = Json {
-        isLenient = true
-        ignoreUnknownKeys = true
-        explicitNulls = false
-    }
+
+
     suspend fun get(): Response<NaviDictionary> {
         val dictJson: String
-        try {
+        try //Download dictionary
+        {
             dictJson = ReykunyuApi.getDictionary()
             Log.i("REYKUNYU", "DICTIONARY DOWNLOADED!")
-        } catch (e: Exception) {
+        }
+        catch (e: Exception)
+        {
             Log.wtf("REYKUNYU", e)
             return Response(ResponseStatus.Error, message = "Download error ($e)")
         }
 
-        return if(convertDictionary(json = dictJson)) {
+        return if (
+            convertDictionary(json = dictJson) // parse dictionary
+        ) {
             Log.i("REYKUNYU", "DICTIONARY LOADED!")
-            Log.i("REYKUNYUFLOOD", "${dictionary?.indexedNavi?.size} words loaded!")
             Response(ResponseStatus.Success, dictionary)
-        } else {
+        }
+        else
+        {
             Response(ResponseStatus.Error, message = "Loading error")
         }
     }
+
 
     /**
      * Convert Json to the Na'vi dictionary and saves it. Returns true if conversion succeeded.
      */
     private fun convertDictionary(json: String): Boolean {
-        val naviDict = mutableMapOf<String, Navi>()
+        val naviDict = mutableMapOf<String, DictNavi>()
         try {
-            val dictIntermediate =
-                jsonFormat.decodeFromString<Map<String, NaviIntermediate>>(json)
-            for (intermediate in dictIntermediate) {
-                naviDict[intermediate.key] = Navi.create(intermediate.value)
+
+            //Parse
+            val dictRaw =
+                ReykunyuApi.jsonFormat.decodeFromString<Map<String, DictNaviRaw>>(json)
+
+            //Convert raw Navi to DictNavi
+            for (naviRaw in dictRaw) {
+                naviDict[naviRaw.key] = naviRaw.value.toDictNavi()
             }
-        } catch (e: Exception) {
+
+        }
+        catch (e: Exception)
+        {
             Log.wtf("REYKUNYU", e)
             return false
         }
 
+        //Save dictionary to class, and also
         dictionary = NaviDictionary(naviDict.toMap(), indexedTranslations = mutableListOf())
-        dictionary?.update()
-
+        dictionary?.updateLang()
 
         return true
     }

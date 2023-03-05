@@ -6,7 +6,6 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
-import android.util.Patterns
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.*
@@ -39,6 +38,7 @@ import coil.request.ImageRequest
 import com.kip.reykunyu.R
 import com.kip.reykunyu.data.api.AudioImageRepo
 import com.kip.reykunyu.data.dict.*
+import com.kip.reykunyu.data.offline.DictNavi
 import com.kip.reykunyu.ui.theme.Typography
 import com.valentinilk.shimmer.*
 
@@ -49,8 +49,8 @@ import com.valentinilk.shimmer.*
 @Composable
 fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
     val expandable = !navi.seeAlso.isNullOrEmpty() || !navi.pronunciation.isNullOrEmpty() ||
-                !navi.status_note.isNullOrEmpty() || !navi.status.isNullOrEmpty() ||
-                !navi.meaning_note.isNullOrEmpty() || !navi.etymology.isNullOrEmpty() ||
+                navi.status_note != null || !navi.status.isNullOrEmpty() ||
+                !navi.meaning_note.isNullOrEmpty() || navi.etymology != null ||
                 !navi.image.isNullOrEmpty() || !navi.infixes.isNullOrEmpty() ||
                 !navi.source.isNullOrEmpty()
 
@@ -188,16 +188,19 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
                 Column {
                     //meaning note
                     if (navi.meaning_note != null) {
-                        RichText(content = navi.meaning_note, naviClick = naviClick)
+                        for (note in navi.meaning_note){
+                            RichTextComponent(richText = note, naviClick = naviClick)
+                        }
+
                     }
 
                     AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
 
 
                     //etymology
-                    InfoModule(
+                    RichInfoModule(
                         category = "ETYMOLOGY",
-                        content = navi.etymology,
+                        richText = navi.etymology,
                         naviClick = naviClick
                     )
 
@@ -215,15 +218,35 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
                         ) {
                             for (refNavi in navi.seeAlso) {
                                 NaviReferenceChip(
-                                    naviUnformatted = refNavi, onClick = naviClick,
+                                    refNavi = refNavi, onClick = naviClick,
                                     paddingR = 10.dp
                                 )
                             }
                         }
                     }
 
+                    //Derived
+                    if (navi.derived != null) {
+                        Spacer(Modifier.padding(6.dp))
+                        Text(
+                            text = "DERIVED",
+                            style = labelLarge,
+                            modifier = Modifier.padding(horizontal = 20.dp)
+                        )
 
-                    AutoSpacer(navi.etymology, navi.seeAlso, divider = false)
+                        FlowRow(
+                            Modifier.padding(horizontal = 20.dp)
+                        ) {
+                            for (refNavi in navi.derived) {
+                                NaviReferenceChip(
+                                    refNavi = refNavi, onClick = naviClick,
+                                    paddingR = 10.dp
+                                )
+                            }
+                        }
+                    }
+
+                    AutoSpacer(navi.etymology, navi.seeAlso, navi.derived, divider = false)
 
 
                     //Infixes
@@ -250,15 +273,16 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
                     AutoSpacer(navi.infixes, navi.image, padding = 8.dp)
 
                     //status
-                    InfoModule(
+                    TextModule(
                         category = "STATUS", content = navi.status?.uppercase(),
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
-                        naviClick = naviClick
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Black
+                        )
                     )
 
                     //statusNote
-                    InfoModule(
-                        category = "NOTE", content = navi.status_note, padding = 3.dp,
+                    RichInfoModule(
+                        category = "NOTE", richText = navi.status_note, padding = 3.dp,
                         naviClick = naviClick
                     )
 
@@ -414,12 +438,38 @@ fun <T> AutoSpacer(
 
 
 @Composable
-fun InfoModule(
+fun RichInfoModule(
+    category: String,
+    richText: RichText?,
+    style: TextStyle = Typography.bodyLarge,
+    padding: Dp = 8.dp,
+    naviClick: (String) -> Unit
+) {
+    if (richText == null) {
+        return
+    }
+
+    val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
+    Spacer(Modifier.padding(padding))
+    Text(
+        text = category.uppercase(),
+        style = labelLarge,
+        modifier = Modifier.padding(horizontal = 20.dp)
+    )
+
+    RichTextComponent(
+        richText = richText,
+        style = style,
+        naviClick = naviClick
+    )
+}
+
+@Composable
+fun TextModule(
     category: String,
     content: String?,
     style: TextStyle = Typography.bodyLarge,
     padding: Dp = 8.dp,
-    naviClick: (String) -> Unit
 ) {
     if (content == null) {
         return
@@ -433,12 +483,15 @@ fun InfoModule(
         modifier = Modifier.padding(horizontal = 20.dp)
     )
 
-    RichText(
-        content = content,
+    RichTextComponent(
+        richText = RichText(listOf(
+            RichText.Partition(RichText.Partition.Type.Text, text = content)
+        )),
         style = style,
-        naviClick = naviClick
+        naviClick = {}
     )
 }
+
 
 @Composable
 fun ImageModule(
@@ -520,13 +573,16 @@ fun stylePronunciationText(text: String, stressed: Int?): AnnotatedString {
 //region Rich Text
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun RichText(
-    content: String,
+fun RichTextComponent(
+    richText: RichText?,
     style: TextStyle = Typography.bodyLarge,
-    richText: List<RichTextComponent>? = null,
     padding: Boolean = true,
     naviClick: (String) -> Unit
 ) {
+    if(richText == null) {
+        return
+    }
+
 
     //URL
     val context = LocalContext.current
@@ -536,18 +592,21 @@ fun RichText(
         verticalAlignment = Alignment.CenterVertically
     ) {
         //Rich Text
-
-        for (component in richText ?: createRichText(content)) {
+        for (component in richText.sequence) {
             when (component.type) {
-                RichTextComponent.Type.Text -> {
+
+                RichText.Partition.Type.Text ->
+                {
                     Text(
-                        text = component.content,
+                        text = component.text!!,
                         style = style
                     )
                 }
-                RichTextComponent.Type.Url -> {
+
+                RichText.Partition.Type.Url ->
+                {
                     ClickableText(
-                        text = component.url!!,
+                        text = component.urlDisplay!!,
                         style = style.copy(
                             textDecoration = TextDecoration.Underline,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -557,10 +616,10 @@ fun RichText(
                             val customTabsIntent = builder.build()
 
                             //Contains https and http
-                            val url = if (component.content.contains("http")) {
-                                component.content
+                            val url = if (component.url!!.contains("http")) {
+                                component.url
                             } else {
-                                "https://" + component.content
+                                "https://" + component.url
                             }
 
                             // Launch in browser-in-app
@@ -569,15 +628,19 @@ fun RichText(
                         }
                     )
                 }
-                RichTextComponent.Type.NaviRef -> {
+
+                RichText.Partition.Type.Navi ->
+                {
                     NaviReferenceChip(
-                        naviUnformatted = component.content,
+                        refNavi = component.navi!!,
                         paddingL = 1.dp,
                         paddingR = 1.dp,
                         onClick = naviClick
                     )
                 }
-                RichTextComponent.Type.Space -> {
+
+                RichText.Partition.Type.Space ->
+                {
                     Spacer(modifier = Modifier.padding(2.dp))
                 }
             }
@@ -588,15 +651,10 @@ fun RichText(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NaviReferenceChip(
-    naviUnformatted: String,
+    refNavi: String,
     paddingL: Dp = 0.dp, paddingR: Dp = 0.dp,
     onClick: (String) -> Unit
 ) {
-    // Remove the starting and ending brackets [ ]
-    val refNavi = naviUnformatted.removePrefix("[").removeSuffix("]")
-        .split(':', ignoreCase = true)[0] // Removes the type at the end
-    // Example: [skxawng:n] -> skxawng
-
     Spacer(modifier = Modifier
         .padding(horizontal = paddingL)
         .defaultMinSize(minHeight = 0.dp))
@@ -619,92 +677,15 @@ fun NaviReferenceChip(
         .defaultMinSize(minHeight = 0.dp))
 }
 
-fun createRichText(text: String): List<RichTextComponent> {
-    val richText = mutableListOf<RichTextComponent>()
-
-    //URL
 
 
-    //Na'vi
-    @Suppress("RegExpRedundantEscape")
-    val naviSplitRegex = """((?<=\[.[^\[\]]{1,9999}\])|(?=\[.[^\[\]]*\]))"""
-        .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-
-    @Suppress("RegExpRedundantEscape")
-    val naviRegex = """\[.[^\[\]]*\]"""
-        .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-
-    @Suppress("RegExpRedundantEscape")
-    val spaceRegex = """((?<=[ \n\(])|(?=[ \n\)]))"""
-        .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-
-    // We first split the string based on URL, then based on Na'vi ref.
-    // Then we just check whether it's a URL/Na'vi block, and assign the types accordingly
-    val textPartitions = naviSplitRegex.split(text).toList()
-
-    for (partition in textPartitions) {
-//        if (urlRegex.matches(partition)) {
-//            //URL
-//            richText.add(RichTextComponent(
-//                RichTextComponent.Type.Url,
-//                partition,
-//                buildAnnotatedString {
-//                    this.append(partition)
-//                    this.addUrlAnnotation(UrlAnnotation(partition),
-//                        0, partition.length - 1)
-//                }
-//            ))
-//        }
-        if (naviRegex.matches(partition)) {
-            //Na'vi
-            richText.add(RichTextComponent(RichTextComponent.Type.NaviRef, partition))
-        }
-        else {
-            //Text
-            /*
-            * TODO: For some reason text won't wrap with the Na'vi chips. For now I'm going to
-            *  force the text to wrap by splitting every word :/
-            */
-
-            for (words in spaceRegex.split(partition)) {
-                if (Patterns.WEB_URL.matcher(words).matches()) {
-                    richText.add(RichTextComponent(
-                        RichTextComponent.Type.Url,
-                        words,
-                        AnnotatedString(text=words)
-                    ))
-                }else {
-                    if (words == " ") {
-                        richText.add(RichTextComponent(RichTextComponent.Type.Space, words))
-                    }else {
-                        richText.add(RichTextComponent(RichTextComponent.Type.Text, words))
-                    }
-                }
-            }
-        }
-    }
-    
-    return richText.toList()
-}
-data class RichTextComponent(
-    val type: Type,
-    val content: String,
-    val url: AnnotatedString? = null
-) {
-    enum class Type {
-        Text,
-        Url,
-        NaviRef,
-        Space
-    }
-}
 
 //endregion
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SourcesCard(
-    sources: List<List<String>>?,
+    sources: List<Source>?,
     style: TextStyle = Typography.bodyLarge,
     naviClick: (String) -> Unit
 ) {
@@ -713,17 +694,6 @@ fun SourcesCard(
     }
 
     Spacer(Modifier.padding(6.dp))
-
-    val sourcesClean = mutableListOf<List<String>>()
-
-    //Remove random empty elements (List cleanup)
-    for (source in sources) {
-        val sourceClean = source.filter { it.isNotBlank() }
-
-        if (sourceClean.isNotEmpty()) {
-            sourcesClean += sourceClean
-        }
-    }
 
     //Collapsable card
     var expanded by remember { mutableStateOf(false) }
@@ -759,7 +729,7 @@ fun SourcesCard(
 
             AnimatedVisibility(visible = expanded) {
                 Column (Modifier.animateContentSize()) {
-                    for ((index, source) in sourcesClean.withIndex()) {
+                    for ((index, source) in sources.withIndex()) {
                         // "either a string describing the source,
                         // or an array containing a description and an URL." (navi-tsim)
                         Column(
@@ -768,38 +738,32 @@ fun SourcesCard(
                             Row(
                                 Modifier.padding(bottom = 2.dp)
                             ) {
+                                //Index at the beginnning of source
                                 Text(
                                     "${index + 1}.",
                                     style = style.copy(fontWeight = FontWeight.Bold)
                                 )
 
-                                // Check if URL with title or just URLs
-                                if (source.size == 2 &&
-                                    !Patterns.WEB_URL.matcher(source[0]).matches() &&
-                                    Patterns.WEB_URL.matcher(source[1]).matches()
-                                ) {
-                                    // URL
-                                    RichText(
-                                        content = "",
-                                        naviClick = { /* UNUSED */ },
-                                        richText = listOf(
-                                            RichTextComponent(
-                                                RichTextComponent.Type.Url,
-                                                source[1],
-                                                AnnotatedString(text = source[0])
-                                            )
-                                        ),
-                                        padding = false
-                                    )
-                                } else {
-                                    // Rich Text
-                                    Column {
-                                        for (entry in source) {
-                                            RichText(
-                                                content = entry,
-                                                naviClick = naviClick,
-                                                padding = false
-                                            )
+                                when (source.type) {
+                                    Source.Type.RichURL -> {
+                                        // URL
+                                        RichTextComponent(
+                                            naviClick = { /* UNUSED */ },
+                                            richText = source.richUrl,
+                                            padding = false
+                                        )
+                                    }
+
+                                    Source.Type.RichText -> {
+                                        // Rich Text
+                                        Column {
+                                            for (entry in source.richText!!) {
+                                                RichTextComponent(
+                                                    richText = entry,
+                                                    naviClick = naviClick,
+                                                    padding = false
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -820,8 +784,8 @@ fun SourcesCard(
 @Preview
 @Composable
 fun NaviCardPreview() {
-    val naviList = listOf<Navi>(
-        Navi(
+    val naviList = listOf<DictNavi>(
+        DictNavi(
             word = "skxawng skxa wng skxa wng. skxaw ng ì ì",
             type = "ctr",
             pronunciation = listOf(
@@ -855,7 +819,7 @@ fun NaviCardPreview() {
     )
     LazyColumn {
         items(items = naviList) { item ->
-            NaviCard(item, {})
+            NaviCard(item.toNavi(), {})
         }
     }
 }

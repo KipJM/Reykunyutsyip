@@ -2,6 +2,7 @@ package com.kip.reykunyu.data.api
 
 import com.kip.reykunyu.data.dict.Language
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
@@ -17,6 +18,8 @@ private const val DICT_URL =
 private const val LANG_LOOKUP_DEPRECATED =
     "search?query={QUERY}&language={LANG}"
 
+
+//fwew search works both ways. Cool!
 private const val SEARCH =
     "fwew-search?query={QUERY}&language={LANG}"
 
@@ -58,6 +61,13 @@ interface ReykunyuApiService {
 }
 
 object ReykunyuApi {
+    @OptIn(ExperimentalSerializationApi::class)
+    val jsonFormat = Json {
+        isLenient = true
+        ignoreUnknownKeys = true
+        explicitNulls = false
+    }
+
 
     @OptIn(ExperimentalSerializationApi::class)
     private val retrofit = Retrofit.Builder()

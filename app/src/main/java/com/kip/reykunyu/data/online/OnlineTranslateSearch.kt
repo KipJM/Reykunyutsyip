@@ -9,10 +9,13 @@ import com.kip.reykunyu.data.dict.TranslateSearchResult
 class OnlineTranslateSearch : TranslateSearchProvider{
     override suspend fun search(query: String, language: Language): TranslateSearchResult {
         try{
-            val dictJson = ReykunyuApi.getDictionary()
+            val searchJson = ReykunyuApi.search(query, language)
         } catch(e: Exception) {
             return TranslateSearchResult(SearchResultStatus.Error, emptyList(), emptyList())
         }
         TODO()
     }
 }
+
+
+

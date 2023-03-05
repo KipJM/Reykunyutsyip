@@ -51,7 +51,7 @@ class OfflineTranslateSearch : TranslateSearchProvider {
         fromNaviSearch = fromNaviSearch.sortedByDescending { it.second }.toMutableList()
 
 
-        val fromNaviResults = fromNaviSearch.map { dictionary.indexedNavi[it.first.index] }
+        val fromNaviResults = fromNaviSearch.map { dictionary.indexedNavi[it.first.index].toNavi() }
 
 
         // =>Na'vi search
@@ -62,7 +62,7 @@ class OfflineTranslateSearch : TranslateSearchProvider {
             relevanceLimit
         ).map { it.referent.second }.distinct()
 
-        val toNaviResults = toNaviSearch.map { dictionary.indexedNavi[it] }
+        val toNaviResults = toNaviSearch.map { dictionary.indexedNavi[it].toNavi() }
 
         return TranslateSearchResult(SearchResultStatus.Success, fromNaviResults, toNaviResults)
     }
