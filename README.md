@@ -10,11 +10,11 @@ Currently, the app is still in **early development**, but a beta build should be
 Translate from and to Na'vi  
 >  Online mode using Reykunyu API  
 >  Offline mode using a cached Reykunyu dictionary  
->  Navi Card  
+>  ~~Navi Card~~   ***DONE!***  
 >>    ~~All text features~~   ***DONE!***
 >>    ~~Na'vi reference link~~  ***DONE!***
->>    audio  
->>    images of the cute animals :)  
+>>    ~~audio~~   ***DONE!***
+>>    ~~images of the cute animals :)~~   ***DONE!***
 >
 >Adaptive UI using Material Design + Material You
 
