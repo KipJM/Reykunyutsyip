@@ -247,8 +247,8 @@ data class RichText(
                             sequence.add(
                                 Partition(
                                     Partition.Type.Url,
-                                    words,
-                                    urlDisplay = AnnotatedString(text = words)
+                                    urlDisplay = AnnotatedString(text = words),
+                                    url = words
                                 )
                             )
                         }

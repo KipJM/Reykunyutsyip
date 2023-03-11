@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -21,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -47,20 +49,19 @@ import com.valentinilk.shimmer.*
     ExperimentalAnimationApi::class
 )
 @Composable
-fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
+fun NaviCard(navi: Navi, naviClick: (String) -> Unit, expanded: Boolean, toggleExpand: () -> Unit) {
+
     val expandable = !navi.seeAlso.isNullOrEmpty() || !navi.pronunciation.isNullOrEmpty() ||
                 navi.status_note != null || !navi.status.isNullOrEmpty() ||
                 !navi.meaning_note.isNullOrEmpty() || navi.etymology != null ||
                 !navi.image.isNullOrEmpty() || !navi.infixes.isNullOrEmpty() ||
                 !navi.source.isNullOrEmpty()
 
-    var expanded by remember { mutableStateOf(false)} //expanded
-
     val labelLarge = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp)
 
 
     ElevatedCard(
-        onClick = {if(expandable) expanded = !expanded},
+        onClick = {if(expandable) toggleExpand()},
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
@@ -115,7 +116,7 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
             }
 
             //Pronunciation
-            AnimatedVisibility(visible = expanded) {
+            AnimatedVisibility(expanded) {
                 if (navi.pronunciation != null) {
                     for (pronunciation in navi.pronunciation) {
                         Row(
@@ -286,12 +287,13 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
                         naviClick = naviClick
                     )
 
-                    Spacer(modifier = Modifier.padding(0.dp))
 
-                    //Sources
-                    SourcesCard(sources = navi.source, naviClick = naviClick)
                 }
             }
+
+            SourcesCard(sources = navi.source, show = expanded, naviClick = naviClick)
+
+
             Spacer(Modifier.padding(6.dp))
 
 
@@ -301,15 +303,10 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit) {
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp)
+                        .padding(horizontal = 15.dp)
+                        .clip(shape = RoundedCornerShape(50))
                         .clickable {
-                            expanded = !expanded
-                            Log.i(
-                                "REYKUNYUFLOOD",
-                                navi.seeAlso.toString() + navi.pronunciation.toString() + navi.status_note.toString() +
-                                        navi.status.toString() + navi.meaning_note.toString() + navi.etymology.toString() +
-                                        navi.image.toString() + navi.infixes.toString() + navi.source.toString()
-                            )
+                            toggleExpand()
                         }
                 ) {
 
@@ -682,96 +679,101 @@ fun NaviReferenceChip(
 
 //endregion
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun SourcesCard(
     sources: List<Source>?,
     style: TextStyle = Typography.bodyLarge,
+    show: Boolean,
     naviClick: (String) -> Unit
 ) {
     if (sources.isNullOrEmpty()) {
         return
     }
 
-    Spacer(Modifier.padding(6.dp))
-
     //Collapsable card
     var expanded by remember { mutableStateOf(false) }
 
-    Card(
-        onClick = {expanded = !expanded},
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp)
-            .animateContentSize()
-    ) {
-        Column(
-            modifier = Modifier.padding(start = 20.dp)
-        ) {
-            //Title
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(end = 10.dp)
+    Column(Modifier.animateContentSize()) {
+        if (show) {
+            Spacer(Modifier.padding(6.dp))
+            Card(
+                onClick = { expanded = !expanded },
+                modifier = Modifier
+                    .animateContentSize()
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp)
             ) {
-                Text(
-                    text = "SOURCES",
-                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 18.sp),
-                )
-                Spacer(Modifier.weight(1f))
-                IconButton(onClick = { expanded = !expanded }) {
-                    if (expanded) {
-                       Icon(Icons.Filled.KeyboardArrowDown, "fold sources")
-                    } else {
-                        Icon(Icons.Filled.KeyboardArrowUp, "expand sources")
+                Column(
+                    modifier = Modifier
+                        .padding(start = 20.dp)
+                ) {
+                    //Title
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 10.dp)
+                    ) {
+                        Text(
+                            text = "SOURCES",
+                            style = MaterialTheme.typography.labelLarge.copy(fontSize = 18.sp),
+                        )
+                        Spacer(Modifier.weight(1f))
+                        IconButton(onClick = { expanded = !expanded }) {
+                            if (expanded) {
+                                Icon(Icons.Filled.KeyboardArrowDown, "fold sources")
+                            } else {
+                                Icon(Icons.Filled.KeyboardArrowUp, "expand sources")
+                            }
+                        }
                     }
-                }
-            }
 
-            AnimatedVisibility(visible = expanded) {
-                Column (Modifier.animateContentSize()) {
-                    for ((index, source) in sources.withIndex()) {
-                        // "either a string describing the source,
-                        // or an array containing a description and an URL." (navi-tsim)
-                        Column(
-                            Modifier.padding(end = 10.dp)
-                        ) {
-                            Row(
-                                Modifier.padding(bottom = 2.dp)
-                            ) {
-                                //Index at the beginnning of source
-                                Text(
-                                    "${index + 1}.",
-                                    style = style.copy(fontWeight = FontWeight.Bold)
-                                )
-
-                                when (source.type) {
-                                    Source.Type.RichURL -> {
-                                        // URL
-                                        RichTextComponent(
-                                            naviClick = { /* UNUSED */ },
-                                            richText = source.richUrl,
-                                            padding = false
+                    AnimatedVisibility(visible = expanded) {
+                        Column {
+                            for ((index, source) in sources.withIndex()) {
+                                // "either a string describing the source,
+                                // or an array containing a description and an URL." (navi-tsim)
+                                Column(
+                                    Modifier.padding(end = 10.dp)
+                                ) {
+                                    Row(
+                                        Modifier.padding(bottom = 2.dp)
+                                    ) {
+                                        //Index at the beginnning of source
+                                        Text(
+                                            "${index + 1}.",
+                                            style = style.copy(fontWeight = FontWeight.Bold)
                                         )
-                                    }
 
-                                    Source.Type.RichText -> {
-                                        // Rich Text
-                                        Column {
-                                            for (entry in source.richText!!) {
+                                        when (source.type) {
+                                            Source.Type.RichURL -> {
+                                                // URL
                                                 RichTextComponent(
-                                                    richText = entry,
-                                                    naviClick = naviClick,
+                                                    naviClick = { /* UNUSED */ },
+                                                    richText = source.richUrl,
                                                     padding = false
                                                 )
+                                            }
+
+                                            Source.Type.RichText -> {
+                                                // Rich Text
+                                                Column {
+                                                    for (entry in source.richText!!) {
+                                                        RichTextComponent(
+                                                            richText = entry,
+                                                            naviClick = naviClick,
+                                                            padding = false
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
+                                Spacer(Modifier.padding(6.dp))
                             }
+                            Spacer(Modifier.padding(3.dp))
                         }
-                        Spacer(Modifier.padding(6.dp))
                     }
-                    Spacer(Modifier.padding(3.dp))
                 }
             }
         }
@@ -819,7 +821,10 @@ fun NaviCardPreview() {
     )
     LazyColumn {
         items(items = naviList) { item ->
-            NaviCard(item.toNavi(), {})
+            var expanded by remember {
+                mutableStateOf(false)
+            }
+            NaviCard(item.toNavi(), {}, expanded, {expanded = !expanded})
         }
     }
 }

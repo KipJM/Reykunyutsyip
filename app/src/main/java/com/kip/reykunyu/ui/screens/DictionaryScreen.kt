@@ -284,6 +284,10 @@ fun NaviList(naviList: List<Navi>, naviAction: (String) -> Unit) {
         return
     }
 
+    val expandedList = remember {
+        mutableStateMapOf<Navi, Boolean>(*naviList.map { Pair(it, false) }.toTypedArray())
+    }
+
     val state: LazyListState = rememberLazyListState()
     LazyColumn(
         state = state,
@@ -291,7 +295,12 @@ fun NaviList(naviList: List<Navi>, naviAction: (String) -> Unit) {
         modifier = Modifier.simpleVerticalScrollbar(state)
     ) {
         items(naviList) {item ->
-            NaviCard(navi = item, naviClick = { naviAction(it) })
+            NaviCard(
+                navi = item,
+                naviClick = { naviAction(it) },
+                expanded = expandedList[item]!!,
+                toggleExpand = {expandedList[item] = !expandedList[item]!!}
+            )
         }
 
         item{
