@@ -1,9 +1,9 @@
 # ReykunyuAndroid
 An unofficial android client for Reykunyu.lu, the Na'vi dictionary.  
-Made with Kotlin and Jetpack compose, with Material Design.  
+Made using Kotlin and Jetpack compose, with Material Design.  
 I hope you like it!
 ## Status
-Currently, the app is still in **early development**, but a beta build should be coming soon!
+Currently, the app is still in **extremely early development**, but an alpha build should be coming soon!
 
 
 # Current target features
@@ -11,10 +11,10 @@ Translate from and to Na'vi
 >  Online mode using Reykunyu API  
 >  Offline mode using a cached Reykunyu dictionary  
 >  ~~Navi Card~~   ***DONE!***  
->>    ~~All text features~~   ***DONE!***
->>    ~~Na'vi reference link~~  ***DONE!***
->>    ~~audio~~   ***DONE!***
->>    ~~images of the cute animals :)~~   ***DONE!***
+>>    ~~All text features~~   ***DONE!***  
+>>    ~~Na'vi reference link~~  ***DONE!***  
+>>    ~~audio~~   ***DONE!***  
+>>    ~~images of the cute animals :)~~   ***DONE!***  
 >
 >Adaptive UI using Material Design + Material You
 
