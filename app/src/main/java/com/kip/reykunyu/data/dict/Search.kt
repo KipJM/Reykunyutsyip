@@ -12,7 +12,7 @@ enum class SearchResultStatus{
 
 data class TranslateSearchResult(
     val status: SearchResultStatus,
-    val fromNavi: List<Navi>, //Sort by relevance
+    val fromNavi: List<Pair<String,List<Navi>>>, //Split a sentence into words, translate indivisually
     val toNavi: List<Navi>, //Sort by relevance
     val info: String? = null
 )

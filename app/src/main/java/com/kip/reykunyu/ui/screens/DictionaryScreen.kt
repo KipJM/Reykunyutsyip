@@ -5,9 +5,11 @@ package com.kip.reykunyu.ui.screens
 import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -15,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -30,6 +33,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -240,13 +244,17 @@ fun DictionarySearchBar(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SearchDisplay(fromNavi: List<Navi>, toNavi: List<Navi>, naviAction: (String) -> Unit) {
+fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, naviAction: (String) -> Unit) {
 
     // 2 Pages: From Na'vi words and [Language] to Na'vi words
     val initPage = if (fromNavi.isEmpty() && toNavi.isNotEmpty()) { 1 } else { 0 }
 
     val state = rememberPagerState(initialPage = initPage)
-    val titles = listOf("Na\'vi to Lang (${fromNavi.size})", "Lang to Na\'vi (${toNavi.size})")
+
+    val titles = listOf(
+        "Na\'vi to Lang (${fromNavi.sumOf { it.second.size }})",
+        "Lang to Na\'vi (${toNavi.size})"
+    )
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -265,12 +273,68 @@ fun SearchDisplay(fromNavi: List<Navi>, toNavi: List<Navi>, naviAction: (String)
             }
         }
 
-        HorizontalPager(pageCount = 2, state = state, pageSpacing = 1.dp) {
-            when (state.currentPage) {
-                0 -> NaviList(naviList = fromNavi, naviAction = { naviAction(it) })
+        HorizontalPager(pageCount = 2, state = state, pageSpacing = 10.dp,
+            userScrollEnabled = fromNavi.size <= 1
+        ) { o ->
+            when (o) {
+                0 -> FromNaviList(
+                    fromNavi = fromNavi,
+                    naviAction = { naviAction(it) }
+                )
                 1 -> NaviList(naviList = toNavi, naviAction = { naviAction(it) })
             }
         }
+    }
+}
+
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun FromNaviList(
+    fromNavi: List<Pair<String, List<Navi>>>,
+    naviAction: (String) -> Unit
+) {
+
+    if(fromNavi.size <= 1){ //Auto hide selection bar if only one element
+        NaviList(naviList = fromNavi[0].second, naviAction = naviAction)
+        return
+    }
+
+    val state = rememberPagerState(initialPage = 0) //chosen word index
+    val coroutineScope = rememberCoroutineScope()
+
+    val indicator = @Composable { tabPositions: List<TabPosition> ->
+        FancyAnimatedIndicator(tabPositions = tabPositions, selectedTabIndex = state.currentPage)
+    }
+
+
+    Column {
+        ScrollableTabRow(
+            selectedTabIndex = state.currentPage,
+            indicator = indicator,
+            divider = {}
+        ) {
+            fromNavi.forEachIndexed { index, element ->
+                Tab(
+                    selected = state.currentPage == index,
+                    onClick = {
+                        coroutineScope.launch {
+                            state.animateScrollToPage(index)
+                        }
+                    },
+                    text = { Text(element.first) }
+                )
+            }
+        }
+
+        Divider(Modifier
+            .fillMaxWidth()
+        )
+
+        HorizontalPager(pageCount = fromNavi.size, state=state) {
+            NaviList(naviList = fromNavi[it].second, naviAction = naviAction)
+        }
+
     }
 }
 
@@ -349,4 +413,74 @@ fun Modifier.simpleVerticalScrollbar(
             )
         }
     }
+}
+
+
+
+@Composable
+fun FancyAnimatedIndicator(tabPositions: List<TabPosition>, selectedTabIndex: Int) {
+    val colors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiary,
+    )
+    val transition = updateTransition(selectedTabIndex, label = "")
+    val indicatorStart by transition.animateDp(
+        transitionSpec = {
+            // Handle directionality here, if we are moving to the right, we
+            // want the right side of the indicator to move faster, if we are
+            // moving to the left, we want the left side to move faster.
+            if (initialState < targetState) {
+                spring(dampingRatio = 1f, stiffness = 50f)
+            } else {
+                spring(dampingRatio = 1f, stiffness = 1000f)
+            }
+        }, label = ""
+    ) {
+        tabPositions[it].left
+    }
+
+    val indicatorEnd by transition.animateDp(
+        transitionSpec = {
+            // Handle directionality here, if we are moving to the right, we
+            // want the right side of the indicator to move faster, if we are
+            // moving to the left, we want the left side to move faster.
+            if (initialState < targetState) {
+                spring(dampingRatio = 1f, stiffness = 1000f)
+            } else {
+                spring(dampingRatio = 1f, stiffness = 50f)
+            }
+        }, label = ""
+    ) {
+        tabPositions[it].right
+    }
+
+    val indicatorColor by transition.animateColor(label = "") {
+        colors[it % colors.size]
+    }
+
+    FancyIndicator(
+        // Pass the current color to the indicator
+        indicatorColor,
+        modifier = Modifier
+            // Fill up the entire TabRow, and place the indicator at the start
+            .fillMaxSize()
+            .wrapContentSize(align = Alignment.BottomStart)
+            // Apply an offset from the start to correctly position the indicator around the tab
+            .offset(x = indicatorStart)
+            // Make the width of the indicator follow the animated width as we move between tabs
+            .width(indicatorEnd - indicatorStart)
+    )
+}
+
+@Composable
+fun FancyIndicator(color: Color, modifier: Modifier = Modifier) {
+    // Draws a rounded rectangular with border around the Tab, with a 5.dp padding from the edges
+    // Color is passed in as a parameter [color]
+    Box(
+        modifier
+            .padding(5.dp)
+            .fillMaxSize()
+            .border(BorderStroke(2.dp, color), RoundedCornerShape(5.dp))
+    )
 }
