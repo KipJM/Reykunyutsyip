@@ -16,19 +16,26 @@
 
     <!-- UI -->
     <string name="search_description">Search</string>
-    <string name="search">Search..</string>
+    <string name="search_box">Search..</string>
     <string name="search_help">Type Na\'vi or your preferred language in the search bar to search</string>
+
     <string name="loading">Loading…</string>
     <string name="downloading_dict">Downloading dictionary…</string>
     <string name="error">ERROR!</string>
+
     <string name="results_empty">No results</string>
     <string name="end_of_list">(end)</string>
+
     <string name="image_copyright">Artwork copyright Eana Unil, [TODO! Get permission]</string>
+
     <string name="translate">Translate</string>
     <string name="sentence_analysis">Sentence Analysis</string>
     <string name="annotated">Annotated Dictionary</string>
     <string name="rhymes">Rhymes</string>
     <string name="offline">Offline Dictionary</string>
+
+    <string name="search">Search</string>
+    <string name="settings">Settings</string>
 
 
 </resources>

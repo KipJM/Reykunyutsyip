@@ -62,7 +62,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun DictionaryScreen(
     offlineDictViewModel: OfflineDictionaryViewModel = viewModel(),
-    searchViewModel: DictionarySearchViewModel = viewModel()
+    searchViewModel: DictionarySearchViewModel = viewModel(),
+    openNavDrawerAction: () -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
     val dictState = offlineDictViewModel.offlineDictState
@@ -83,7 +84,7 @@ fun DictionaryScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { TODO() }) {
+                    IconButton(onClick = openNavDrawerAction) {
                         Icon(
                             imageVector = Icons.Filled.Menu,
                             contentDescription = "Reykunyu sidebar menu access"
@@ -315,7 +316,7 @@ fun DictionarySearchBar(
         placeholder =
         {
             Text(
-                text = stringResource(R.string.search),
+                text = stringResource(R.string.search_box),
                 style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp),
             )
         },
@@ -368,15 +369,17 @@ fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, 
             }
         }
 
-        HorizontalPager(pageCount = 2, state = state, pageSpacing = 10.dp,
-            userScrollEnabled = fromNavi.size <= 1
-        ) { o ->
-            when (o) {
-                0 -> FromNaviList(
-                    fromNavi = fromNavi,
-                    naviAction = { naviAction(it) }
-                )
-                1 -> NaviList(naviList = toNavi, naviAction = { naviAction(it) })
+        Surface{
+            HorizontalPager(pageCount = 2, state = state, pageSpacing = 10.dp,
+                userScrollEnabled = fromNavi.size <= 1
+            ) { o ->
+                when (o) {
+                    0 -> FromNaviList(
+                        fromNavi = fromNavi,
+                        naviAction = { naviAction(it) }
+                    )
+                    1 -> NaviList(naviList = toNavi, naviAction = { naviAction(it) })
+                }
             }
         }
     }
