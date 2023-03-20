@@ -4,12 +4,11 @@ package com.kip.reykunyu.ui.screens
 
 import android.util.Log
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -36,6 +35,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kip.reykunyu.R
 import com.kip.reykunyu.data.dict.Navi
+import com.kip.reykunyu.data.dict.SearchType
 import com.kip.reykunyu.ui.NaviCard
 import com.kip.reykunyu.viewmodels.DictSearchState
 import com.kip.reykunyu.viewmodels.DictionarySearchViewModel
@@ -90,13 +91,7 @@ fun DictionaryScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onSearch ) {
-                        Icon(
-                            imageVector = Icons.Filled.Search,
-                            contentDescription = stringResource(R.string.search_description),
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
+                    SearchTypeIcon(searchViewModel)
                 }
             )
         },
@@ -152,6 +147,96 @@ fun DictionaryScreen(
 
 
 }
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectAction = { o: SearchType ->
+        searchViewModel.updateSearchType(o)
+        expanded = false
+    }
+
+    Column {
+
+        IconButton(onClick = { expanded = !expanded }) {
+            Crossfade(targetState = searchViewModel.searchType) {
+                Icon(
+                    painterResource(it.icon),
+                    contentDescription = stringResource(it.display),
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+            }
+        }
+
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        )
+        {
+            SearchTypeMenuItem(
+                type = SearchType.Translate,
+                onlineOnly = true,
+                searchViewModel = searchViewModel,
+                selectAction = selectAction
+            )
+
+            SearchTypeMenuItem(
+                type = SearchType.Sentence,
+                onlineOnly = true,
+                searchViewModel = searchViewModel,
+                selectAction = selectAction
+            )
+
+            SearchTypeMenuItem(
+                type = SearchType.Annotated,
+                onlineOnly = true,
+                searchViewModel = searchViewModel,
+                selectAction = selectAction
+            )
+
+            SearchTypeMenuItem(
+                type = SearchType.Rhymes,
+                onlineOnly = true,
+                searchViewModel = searchViewModel,
+                selectAction = selectAction
+            )
+
+            Divider()
+
+            SearchTypeMenuItem(
+                type = SearchType.Offline,
+                onlineOnly = false,
+                searchViewModel = searchViewModel,
+                selectAction = selectAction
+            )
+
+        }
+    }
+}
+
+@Composable
+fun SearchTypeMenuItem(type: SearchType, onlineOnly: Boolean,
+                   searchViewModel: DictionarySearchViewModel, selectAction: (SearchType) -> Unit
+) {
+    DropdownMenuItem(
+        enabled = !searchViewModel.offlineMode || !onlineOnly,
+        text = { Text(stringResource(type.display)) },
+        leadingIcon =
+        {
+            Icon(
+                painterResource(type.icon),
+                stringResource(type.display)
+            )
+        },
+        onClick = { selectAction(type) },
+        modifier = if(searchViewModel.searchType == type)
+            Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
+        else Modifier
+    )
+}
+
 
 @Composable
 fun DownloadDictionaryButton(
@@ -233,6 +318,16 @@ fun DictionarySearchBar(
                 text = stringResource(R.string.search),
                 style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp),
             )
+        },
+        trailingIcon =
+        {
+            IconButton(onClick = onSearch ) {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = stringResource(R.string.search_description),
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
         },
         textStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp),
         singleLine = true,

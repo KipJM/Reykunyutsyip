@@ -24,6 +24,11 @@
     <string name="results_empty">No results</string>
     <string name="end_of_list">(end)</string>
     <string name="image_copyright">Artwork copyright Eana Unil, [TODO! Get permission]</string>
+    <string name="translate">Translate</string>
+    <string name="sentence_analysis">Sentence Analysis</string>
+    <string name="annotated">Annotated Dictionary</string>
+    <string name="rhymes">Rhymes</string>
+    <string name="offline">Offline Dictionary</string>
 
 
 </resources>
