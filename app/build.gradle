@@ -105,4 +105,8 @@ dependencies {
     //SHIMMER LOADING EFFECT
     implementation 'com.valentinilk.shimmer:compose-shimmer:1.0.4'
 
+    //Data store
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+
+
 }

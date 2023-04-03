@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kip.reykunyu.ui.screens.DictionaryScreen
+import com.kip.reykunyu.ui.screens.SettingsScreen
 import com.kip.reykunyu.viewmodels.AppViewModel
 import com.kip.reykunyu.viewmodels.DictionarySearchViewModel
 import com.kip.reykunyu.viewmodels.OfflineDictionaryViewModel
@@ -74,7 +75,14 @@ fun ReykunyuApp() {
                             }
                         )
 
-                    ScreenState.Settings -> {}
+                    ScreenState.Settings -> {
+                        SettingsScreen(
+                            openNavDrawerAction = {
+                                appViewModel.navDrawerVisibility = DrawerValue.Open
+                                scope.launch { drawerState.open() }
+                            }
+                        )
+                    }
                 }
 
             }
