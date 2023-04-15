@@ -253,6 +253,8 @@ data class RichText(
                             )
                         }
 
+                        words == "\n" ->
+                            sequence.add(Partition(Partition.Type.Text, words))
 
                         //Space
                         words.isBlank() ->

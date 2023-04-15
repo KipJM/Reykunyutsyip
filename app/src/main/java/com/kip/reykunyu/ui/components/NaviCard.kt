@@ -594,10 +594,15 @@ fun RichTextComponent(
 
                 RichText.Partition.Type.Text ->
                 {
-                    Text(
-                        text = component.text!!,
-                        style = style
-                    )
+                    //Hacky way of supporting line breaks
+                    if (component.text!! == "\n"){
+                        Spacer(Modifier.padding(horizontal = 100000.dp, vertical=2.dp))
+                    }else {
+                        Text(
+                            text = component.text,
+                            style = style
+                        )
+                    }
                 }
 
                 RichText.Partition.Type.Url ->

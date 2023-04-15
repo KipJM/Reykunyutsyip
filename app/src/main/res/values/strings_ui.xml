@@ -26,7 +26,7 @@
     <string name="results_empty">No results</string>
     <string name="end_of_list">(end)</string>
 
-    <string name="image_copyright">Artwork copyright Eana Unil, [TODO! Get permission]</string>
+    <string name="image_copyright">Artwork copyright Eana Unil</string>
 
     <string name="translate">Translate</string>
     <string name="sentence_analysis">Sentence Analysis</string>
@@ -37,5 +37,37 @@
     <string name="search">Search</string>
     <string name="settings">Settings</string>
 
+
+    <string name="appinfo_text">kaltxì!
+        This is an unofficial client of Reykunyu, a Na\'vi dictionary. The app is created by Kip! \n
+        \n
+        The app is open-source and licensed under the BSD 2-Clause "Simplified" License (https://github.com/KipJM/ReykunyuAndroid/blob/master/LICENSE). \n
+        You can find the app\'s source code, and release version on its github: https://github.com/KipJM/ReykunyuAndroid . This probably is where you got the app! \n
+        \n
+        <u>If you have any questions or suggestions regarding the app, you can reach me on Discord: <b>Kip#2846</b></u> \n
+        \n
+        Huge thanks to Wllìm for creating Reykunyu! \n
+        btw, here\'s a completely unaffiliated ad to Kelutral if you want more resource to learning Na\'vi: https://kelutral.org
+    </string>
+
+    <string name="credits_text">
+        This app is an unofficial client of Reykunyu (https://reykunyu.lu) (https://github.com/Willem3141/navi-reykunyu). The awesome Reykunyu dictionary and site was made by Wllìm! Thank you so much! \n
+        This app does not contain any dictionary or translation data on it\'s own, they\'re downloaded from Reykunyu and then displayed in app. \n
+        \n
+        \n
+        all the dictionary data(offline dictionary cache and online search results) are downloaded during runtime from Reykunyu\'s APIs. \n
+        The offline dictionary cache data is licensed under CC-BY-SA-NC 3.0(https://creativecommons.org/licenses/by-nc-sa/3.0/). This excludes the Annotated Dictionary data, the audio files, and the animal drawings—these are copyrighted by their respective authors. \n
+        \n
+        \n
+        <i>(The credits below are copied from Reykunyu\'s website)</i> \n
+        <b>Dictionary data</b> \n
+        The base dictionary data was taken from Eana Eltu by Mark Miller, Tirea Aean, and others, and then edited further by Eana Unil, Tekre, and Wllìm. The Annotated Dictionary definitions were taken from the Annotated Dictionary project by Plumps. \n
+        \n
+        <b>Audio</b> \n
+        The voice clips were provided by Plumps (who recorded them for dict-na\'vi(https://dict-navi.com)) and tsyili (who recorded them for Learn Na\'vi(https://learnnavi.org/navi-vocabulary/)). \n
+        \n
+        <b>Artwork</b> \n
+        The drawings of Pandoran animals were made by Eana Unil. (Haven’t encountered one yet? Try searching for [toruk]!) Reykunyu’s logo was drawn by Eana Unil, and the calligraphy in the header was made by Nahura.
+    </string>
 
 </resources>
