@@ -46,13 +46,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kip.reykunyu.R
+import com.kip.reykunyu.data.dict.Language
 import com.kip.reykunyu.data.dict.Navi
-import com.kip.reykunyu.data.dict.SearchType
-import com.kip.reykunyu.ui.NaviCard
-import com.kip.reykunyu.viewmodels.DictSearchState
-import com.kip.reykunyu.viewmodels.DictionarySearchViewModel
-import com.kip.reykunyu.viewmodels.OfflineDictState
-import com.kip.reykunyu.viewmodels.OfflineDictionaryViewModel
+import com.kip.reykunyu.data.dict.SearchMode
+import com.kip.reykunyu.ui.components.NaviCard
+import com.kip.reykunyu.viewmodels.*
 import kotlinx.coroutines.launch
 
 
@@ -61,16 +59,18 @@ import kotlinx.coroutines.launch
 @Preview
 @Composable
 fun DictionaryScreen(
-    offlineDictViewModel: OfflineDictionaryViewModel = viewModel(),
-    searchViewModel: DictionarySearchViewModel = viewModel(),
+    offlineDictViewModel: OfflineDictionaryViewModel = viewModel(), // For @Preview
+    searchViewModel: DictionarySearchViewModel = viewModel(), // For @Preview
+    preferenceViewModel: PreferenceViewModel = viewModel(factory = PreferenceViewModel.Factory), // For @Preview
     openNavDrawerAction: () -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
     val dictState = offlineDictViewModel.offlineDictState
+    val preferenceState = preferenceViewModel.preferenceState.collectAsState().value
 
     val onSearch = {
         focusManager.clearFocus()
-        searchViewModel.search()
+        searchViewModel.search(preferenceState.searchLanguage)
     }
 
     Scaffold(
@@ -113,13 +113,25 @@ fun DictionaryScreen(
                         )
                     }
                     is OfflineDictState.Loaded -> {
-                        AnimatedContent(targetState = searchViewModel.dictSearchState)
+                        AnimatedContent(targetState = searchViewModel.searchState)
                         { state ->
                             when (state) {
-                                is DictSearchState.Success -> {
+
+                                is SearchState.Standby -> IconInfoView(
+                                    text = stringResource(id = R.string.search_help)
+                                ) {
+                                    Icon(Icons.Rounded.Search, null, modifier = it)
+                                }
+
+
+                                SearchState.Loading -> LoadingView(text = stringResource(id = R.string.loading))
+
+
+                                is SearchState.TranslateSuccess -> {
                                     SearchDisplay(
                                         fromNavi = state.result.fromNavi,
                                         toNavi = state.result.toNavi,
+                                        language = preferenceState.searchLanguage,
                                         naviAction = {
                                             Log.i("REYKUNYU", "NAVI REF: $it")
                                             searchViewModel.updateSearchInput(it)
@@ -127,13 +139,15 @@ fun DictionaryScreen(
                                         }
                                     )
                                 }
-                                DictSearchState.Error -> IconInfoView(text = stringResource(R.string.error))
-                                DictSearchState.Loading -> LoadingView(text = stringResource(id = R.string.loading))
-                                DictSearchState.Standby -> IconInfoView(
-                                    text = stringResource(id = R.string.search_help)
-                                ) {
-                                    Icon(Icons.Rounded.Search, null, modifier = it)
-                                }
+
+                                is SearchState.AnnotatedSuccess -> TODO()
+                                is SearchState.RhymesSuccess -> TODO()
+                                is SearchState.SentenceSuccess -> TODO()
+
+
+                                is SearchState.Error -> IconInfoView(
+                                    text = stringResource(R.string.error) + "()"
+                                )
                             }
                         }
 
@@ -153,7 +167,7 @@ fun DictionaryScreen(
 @Composable
 private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel) {
     var expanded by remember { mutableStateOf(false) }
-    val selectAction = { o: SearchType ->
+    val selectAction = { o: SearchMode ->
         searchViewModel.updateSearchType(o)
         expanded = false
     }
@@ -161,7 +175,7 @@ private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel) {
     Column {
 
         IconButton(onClick = { expanded = !expanded }) {
-            Crossfade(targetState = searchViewModel.searchType) {
+            Crossfade(targetState = searchViewModel.searchMode) {
                 Icon(
                     painterResource(it.icon),
                     contentDescription = stringResource(it.display),
@@ -177,28 +191,28 @@ private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel) {
         )
         {
             SearchTypeMenuItem(
-                type = SearchType.Translate,
+                type = SearchMode.Translate,
                 onlineOnly = true,
                 searchViewModel = searchViewModel,
                 selectAction = selectAction
             )
 
             SearchTypeMenuItem(
-                type = SearchType.Sentence,
+                type = SearchMode.Sentence,
                 onlineOnly = true,
                 searchViewModel = searchViewModel,
                 selectAction = selectAction
             )
 
             SearchTypeMenuItem(
-                type = SearchType.Annotated,
+                type = SearchMode.Annotated,
                 onlineOnly = true,
                 searchViewModel = searchViewModel,
                 selectAction = selectAction
             )
 
             SearchTypeMenuItem(
-                type = SearchType.Rhymes,
+                type = SearchMode.Rhymes,
                 onlineOnly = true,
                 searchViewModel = searchViewModel,
                 selectAction = selectAction
@@ -207,7 +221,7 @@ private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel) {
             Divider()
 
             SearchTypeMenuItem(
-                type = SearchType.Offline,
+                type = SearchMode.Offline,
                 onlineOnly = false,
                 searchViewModel = searchViewModel,
                 selectAction = selectAction
@@ -218,8 +232,8 @@ private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel) {
 }
 
 @Composable
-fun SearchTypeMenuItem(type: SearchType, onlineOnly: Boolean,
-                   searchViewModel: DictionarySearchViewModel, selectAction: (SearchType) -> Unit
+fun SearchTypeMenuItem(type: SearchMode, onlineOnly: Boolean,
+                       searchViewModel: DictionarySearchViewModel, selectAction: (SearchMode) -> Unit
 ) {
     DropdownMenuItem(
         enabled = !searchViewModel.offlineMode || !onlineOnly,
@@ -232,7 +246,7 @@ fun SearchTypeMenuItem(type: SearchType, onlineOnly: Boolean,
             )
         },
         onClick = { selectAction(type) },
-        modifier = if(searchViewModel.searchType == type)
+        modifier = if(searchViewModel.searchMode == type)
             Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
         else Modifier
     )
@@ -340,7 +354,7 @@ fun DictionarySearchBar(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, naviAction: (String) -> Unit) {
+fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, language: Language, naviAction: (String) -> Unit) {
 
     // 2 Pages: From Na'vi words and [Language] to Na'vi words
     val initPage = if (fromNavi.isEmpty() && toNavi.isNotEmpty()) { 1 } else { 0 }
@@ -376,9 +390,10 @@ fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, 
                 when (o) {
                     0 -> FromNaviList(
                         fromNavi = fromNavi,
+                        language = language,
                         naviAction = { naviAction(it) }
                     )
-                    1 -> NaviList(naviList = toNavi, naviAction = { naviAction(it) })
+                    1 -> NaviList(naviList = toNavi, language = language, naviAction = { naviAction(it) })
                 }
             }
         }
@@ -390,11 +405,12 @@ fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, 
 @Composable
 fun FromNaviList(
     fromNavi: List<Pair<String, List<Navi>>>,
+    language: Language,
     naviAction: (String) -> Unit
 ) {
 
     if(fromNavi.size <= 1){ //Auto hide selection bar if only one element
-        NaviList(naviList = fromNavi[0].second, naviAction = naviAction)
+        NaviList(naviList = fromNavi[0].second, language = language, naviAction = naviAction)
         return
     }
 
@@ -430,14 +446,14 @@ fun FromNaviList(
         )
 
         HorizontalPager(pageCount = fromNavi.size, state=state) {
-            NaviList(naviList = fromNavi[it].second, naviAction = naviAction)
+            NaviList(naviList = fromNavi[it].second, language = language, naviAction = naviAction)
         }
 
     }
 }
 
 @Composable
-fun NaviList(naviList: List<Navi>, naviAction: (String) -> Unit) {
+fun NaviList(naviList: List<Navi>, language:Language, naviAction: (String) -> Unit) {
 
     if(naviList.isEmpty()) {
         IconInfoView(text = stringResource(R.string.results_empty)) {
@@ -459,6 +475,7 @@ fun NaviList(naviList: List<Navi>, naviAction: (String) -> Unit) {
         items(naviList) {item ->
             NaviCard(
                 navi = item,
+                language = language,
                 naviClick = { naviAction(it) },
                 expanded = expandedList[item]!!,
                 toggleExpand = {expandedList[item] = !expandedList[item]!!}

@@ -8,19 +8,18 @@ import com.kip.reykunyu.data.online.OnlineTranslateSearch
 
 enum class SearchResultStatus{
     Standby,
-    Loading,
     Success,
     Error
 }
 
-data class TranslateSearchResult(
+data class TranslateResult(
     val status: SearchResultStatus,
     val fromNavi: List<Pair<String,List<Navi>>>, //Split a sentence into words, translate indivisually
     val toNavi: List<Navi>, //Sort by relevance
     val info: String? = null
 )
 
-enum class SearchType(@DrawableRes val icon: Int, @StringRes val display: Int){
+enum class SearchMode(@DrawableRes val icon: Int, @StringRes val display: Int){
     Translate(R.drawable.translate_24, R.string.translate), //Na'vi <-> Language
     Sentence(R.drawable.sentence_24, R.string.sentence_analysis),  //Sentence Analysis
     Annotated(R.drawable.annotated_24, R.string.annotated), //Annotated Dictionary
@@ -30,32 +29,38 @@ enum class SearchType(@DrawableRes val icon: Int, @StringRes val display: Int){
 
 
 interface TranslateSearchProvider{
-    suspend fun search(query: String, language: Language = Language.English): TranslateSearchResult
+    suspend fun search(query: String, language: Language): TranslateResult
 }
 
 interface DictionarySearchRepository {
-    suspend fun search(query: String): TranslateSearchResult
+    suspend fun translate(query: String, online: Boolean, language: Language): TranslateResult
 }
 
 object UniversalSearchRepository: DictionarySearchRepository {
-    val offlineMode: Boolean = true
-    val language: Language = Language.English
+    var previousLanguage: Language = Language.English
 
     private val offlineTranslateSearchProvider:TranslateSearchProvider = OfflineTranslateSearch()
     private val onlineTranslateSearchProvider: TranslateSearchProvider = OnlineTranslateSearch()
 
-    override suspend fun search(query: String): TranslateSearchResult {
+    override suspend fun translate(
+        query: String,
+        online: Boolean,
+        language: Language
+    ): TranslateResult {
+
         if (query.isBlank()) {
-            return TranslateSearchResult(
+            return TranslateResult(
                 status = SearchResultStatus.Standby, emptyList(), emptyList())
         }
 
-        return when (offlineMode) {
-            true -> {
-                //Offline
-                offlineTranslateSearchProvider.search(query, language)
-            }
+        return when (online) {
             false -> {
+                //Offline
+                val result = offlineTranslateSearchProvider.search(query, language)
+                previousLanguage = language
+                return result
+            }
+            true -> {
                 //Online
                 onlineTranslateSearchProvider.search(query, language)
             }

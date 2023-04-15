@@ -14,21 +14,21 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kip.reykunyu.ui.screens.DictionaryScreen
 import com.kip.reykunyu.ui.screens.SettingsScreen
-import com.kip.reykunyu.viewmodels.AppViewModel
-import com.kip.reykunyu.viewmodels.DictionarySearchViewModel
-import com.kip.reykunyu.viewmodels.OfflineDictionaryViewModel
-import com.kip.reykunyu.viewmodels.ScreenState
+import com.kip.reykunyu.viewmodels.*
 import kotlinx.coroutines.launch
 
 
 //Houses the screens
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun ReykunyuApp() {
+fun ReykunyuContainer() {
     val appViewModel: AppViewModel = viewModel()
 
     val offlineDictViewModel: OfflineDictionaryViewModel = viewModel()
     val searchViewModel: DictionarySearchViewModel = viewModel()
+    val preferenceViewModel: PreferenceViewModel = viewModel(
+        factory = PreferenceViewModel.Factory
+    )
 
 
     Surface ()
@@ -77,6 +77,7 @@ fun ReykunyuApp() {
 
                     ScreenState.Settings -> {
                         SettingsScreen(
+                            preferenceViewModel = preferenceViewModel,
                             openNavDrawerAction = {
                                 appViewModel.navDrawerVisibility = DrawerValue.Open
                                 scope.launch { drawerState.open() }

@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.kip.reykunyu.ui.ReykunyuApp
+import com.kip.reykunyu.ui.ReykunyuContainer
 import com.kip.reykunyu.ui.theme.ReykunyuTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ReykunyuTheme {
-                ReykunyuApp()
+                ReykunyuContainer()
             }
         }
     }
@@ -23,6 +23,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DefaultPreview() {
     ReykunyuTheme {
-        ReykunyuApp()
+        ReykunyuContainer()
     }
 }

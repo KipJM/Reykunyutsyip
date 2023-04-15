@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.kip.reykunyu.ui
+package com.kip.reykunyu.ui.components
 
 import android.media.AudioAttributes
 import android.media.MediaPlayer
@@ -49,7 +49,7 @@ import com.valentinilk.shimmer.*
     ExperimentalAnimationApi::class
 )
 @Composable
-fun NaviCard(navi: Navi, naviClick: (String) -> Unit, expanded: Boolean, toggleExpand: () -> Unit) {
+fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expanded: Boolean, toggleExpand: () -> Unit) {
 
     val expandable = !navi.seeAlso.isNullOrEmpty() || !navi.pronunciation.isNullOrEmpty() ||
                 navi.status_note != null || !navi.status.isNullOrEmpty() ||
@@ -171,12 +171,12 @@ fun NaviCard(navi: Navi, naviClick: (String) -> Unit, expanded: Boolean, toggleE
 
             var i = 1
             for (translation in navi.translations) {
-                //TODO: Settings provider
-                if (translation[UniversalSearchRepository.language] != null) {
+                //Displays the proper language
+                if (translation[language] != null) {
                     if (i != 1)
                         Spacer(modifier = Modifier.padding(2.dp))
                     Text(
-                        text = translation[UniversalSearchRepository.language]!!,
+                        text = translation[language]!!,
                         style = Typography.titleMedium,
                         modifier = Modifier
                             .padding(horizontal = 20.dp)
@@ -824,7 +824,7 @@ fun NaviCardPreview() {
             var expanded by remember {
                 mutableStateOf(false)
             }
-            NaviCard(item.toNavi(), {}, expanded, {expanded = !expanded})
+            NaviCard(item.toNavi(), Language.English, {}, expanded, {expanded = !expanded})
         }
     }
 }

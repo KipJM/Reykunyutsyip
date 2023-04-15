@@ -9,12 +9,21 @@ const val relevanceLimit = 85
 class OfflineTranslateSearch : TranslateSearchProvider {
 
 
-    override suspend fun search(query: String, language: Language): TranslateSearchResult {
+    override suspend fun search(query: String, language: Language): TranslateResult {
         if (OfflineDictionary.dictionary == null) {
             //Cancels search if dictionary is not here. This (hopefully) should be unreachable code!
-            return TranslateSearchResult(SearchResultStatus.Error, emptyList(), emptyList())
+            return TranslateResult(
+                SearchResultStatus.Error,
+                emptyList(), emptyList(),
+                info = "Offline dictionary not loaded!"
+            )
         }
         val dictionary = OfflineDictionary.safeDictionary
+
+        //Note: Hacky way to update translation table when language changes
+        if (language != UniversalSearchRepository.previousLanguage) {
+            dictionary.updateLang(language)
+        }
 
         //Split query if Na'vi sentence
         val naviWords = splitNaviSentence(query)
@@ -33,8 +42,9 @@ class OfflineTranslateSearch : TranslateSearchProvider {
 
         val toNaviResults = toNaviSearch.map { dictionary.indexedNavi[it].toNavi() }
 
-        return TranslateSearchResult(SearchResultStatus.Success, fromNaviResults, toNaviResults)
+        return TranslateResult(SearchResultStatus.Success, fromNaviResults, toNaviResults)
     }
+
 
     private fun splitNaviSentence(query: String): List<String> {
         val splitSentecne = query.split(' ')
@@ -58,7 +68,7 @@ class OfflineTranslateSearch : TranslateSearchProvider {
     }
 
 
-    fun naviSearch(dictionary: NaviDictionary, query: String): List<Navi> {
+    private fun naviSearch(dictionary: NaviDictionary, query: String): List<Navi> {
         // Na'vi=> search
         var fromNaviSearch = FuzzySearch.extractSorted(
             query,

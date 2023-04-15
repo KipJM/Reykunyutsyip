@@ -4,7 +4,7 @@ import android.util.Log
 import com.kip.reykunyu.data.api.Response
 import com.kip.reykunyu.data.api.ResponseStatus
 import com.kip.reykunyu.data.api.ReykunyuApi
-import com.kip.reykunyu.data.dict.UniversalSearchRepository
+import com.kip.reykunyu.data.dict.Language
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 
@@ -15,13 +15,13 @@ data class NaviDictionary (
     ) {
 
     //Update indexed translations based on language
-    fun updateLang() {
+    fun updateLang(language: Language) {
         indexedTranslations = mutableListOf()
         indexedNavi.forEachIndexed{ index, navi ->
             for (translation in navi.translations) {
-                if (translation[UniversalSearchRepository.language] != null) {
+                if (translation[language] != null) {
                     indexedTranslations +=
-                        Pair(translation[UniversalSearchRepository.language]!!, index)
+                        Pair(translation[language]!!, index)
                 }
             }
         }
@@ -94,7 +94,8 @@ object OfflineDictionary {
 
         //Save dictionary to class, and also
         dictionary = NaviDictionary(naviDict.toMap(), indexedTranslations = mutableListOf())
-        dictionary?.updateLang()
+        //Defaults to english, it will get auto-recomputed when searching with a different language
+        dictionary?.updateLang(Language.English)
 
         return true
     }

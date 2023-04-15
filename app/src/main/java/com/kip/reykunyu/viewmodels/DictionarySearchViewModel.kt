@@ -5,32 +5,36 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kip.reykunyu.data.dict.SearchResultStatus
-import com.kip.reykunyu.data.dict.SearchType
-import com.kip.reykunyu.data.dict.TranslateSearchResult
-import com.kip.reykunyu.data.dict.UniversalSearchRepository
+import com.kip.reykunyu.data.dict.*
 import kotlinx.coroutines.launch
 
-sealed interface DictSearchState {
-    object Standby : DictSearchState
-    object Loading : DictSearchState
-    data class Success(val result: TranslateSearchResult) : DictSearchState
-    object Error : DictSearchState
+sealed interface SearchState {
+    object Standby : SearchState
+    object Loading : SearchState
+
+    data class TranslateSuccess(val result: TranslateResult) : SearchState
+    data class SentenceSuccess(val result: TranslateResult) : SearchState //TODO: Proper results
+    data class RhymesSuccess(val result: TranslateResult) : SearchState //TODO: Proper results
+    data class AnnotatedSuccess(val result: TranslateResult) : SearchState //TODO: Proper results
+
+
+    data class Error(val info: String?) : SearchState
 }
 
 
 //Handles all the search stuff
 class DictionarySearchViewModel: ViewModel() {
 
-    var dictSearchState: DictSearchState by mutableStateOf(DictSearchState.Standby)
+    var searchState: SearchState by mutableStateOf(SearchState.Standby)
         private set
 
     var searchInput by mutableStateOf("")
         private set
 
-    var searchType by mutableStateOf(SearchType.Translate) //TODO: Currently useless :/
+    var searchMode by mutableStateOf(SearchMode.Translate) //TODO: Currently useless :/
         private set
 
+    //Determines if Reykunyu is reachable
     var offlineMode by mutableStateOf(false)
         private set
 
@@ -40,29 +44,37 @@ class DictionarySearchViewModel: ViewModel() {
     }
 
 
-    fun updateSearchType(type: SearchType) {
-        searchType = type
+    fun updateSearchType(type: SearchMode) {
+        searchMode = type
     }
 
 
-    fun search() {
-        dictSearchState = DictSearchState.Loading
+    fun search(language: Language) {
+        searchState = SearchState.Loading
         viewModelScope.launch {
-            val response = UniversalSearchRepository.search(searchInput)
-            dictSearchState = when (response.status) {
-                SearchResultStatus.Success -> {
-                    DictSearchState.Success(response)
-                }
+            when (searchMode) {
+                SearchMode.Translate -> translate(true, language)
+                SearchMode.Sentence -> TODO()
+                SearchMode.Annotated -> TODO()
+                SearchMode.Rhymes -> TODO()
+                SearchMode.Offline -> translate(false, language)
+            }
+        }
+    }
 
-                SearchResultStatus.Error -> {
-                    DictSearchState.Error
-                }
-                SearchResultStatus.Standby -> {
-                    DictSearchState.Standby
-                }
-                SearchResultStatus.Loading -> {
-                    DictSearchState.Standby
-                }
+    private suspend fun translate(online: Boolean, language: Language) {
+        val response = UniversalSearchRepository.translate(searchInput, online, language)
+
+        searchState = when (response.status) {
+            SearchResultStatus.Success -> {
+                SearchState.TranslateSuccess(response)
+            }
+
+            SearchResultStatus.Error -> {
+                SearchState.Error(response.info)
+            }
+            SearchResultStatus.Standby -> {
+                SearchState.Standby
             }
         }
     }
