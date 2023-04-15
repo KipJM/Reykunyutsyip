@@ -59,7 +59,7 @@ import kotlinx.coroutines.launch
 @Preview
 @Composable
 fun DictionaryScreen(
-    offlineDictViewModel: OfflineDictionaryViewModel = viewModel(), // For @Preview
+    offlineDictViewModel: OfflineDictionaryViewModel = viewModel(factory = OfflineDictionaryViewModel.Factory), // For @Preview
     searchViewModel: DictionarySearchViewModel = viewModel(), // For @Preview
     preferenceViewModel: PreferenceViewModel = viewModel(factory = PreferenceViewModel.Factory), // For @Preview
     openNavDrawerAction: () -> Unit = {}
@@ -79,6 +79,7 @@ fun DictionaryScreen(
                 title = {
                     DictionarySearchBar(
                         searchString = searchViewModel.searchInput,
+                        enabled = (dictState == OfflineDictState.Loaded),
                         onInputChanged = {searchViewModel.updateSearchInput(it)},
                         onSearch = onSearch
                     )
@@ -92,7 +93,7 @@ fun DictionaryScreen(
                     }
                 },
                 actions = {
-                    SearchTypeIcon(searchViewModel)
+                    SearchTypeIcon(searchViewModel, enabled = (dictState == OfflineDictState.Loaded))
                 }
             )
         },
@@ -104,9 +105,11 @@ fun DictionaryScreen(
             ) {
 
                 when (dictState) {
-                    is OfflineDictState.NotLoaded -> DownloadDictionaryButton {
+                    //Auto load dictionary on start
+                    is OfflineDictState.NotLoaded -> offlineDictViewModel.downloadDictionary()
+                    /*DownloadDictionaryButton {
                         offlineDictViewModel.downloadDictionary()
-                    }
+                    }*/
                     is OfflineDictState.Loading -> {
                         LoadingView(
                             text = stringResource(R.string.downloading_dict)
@@ -165,7 +168,7 @@ fun DictionaryScreen(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel) {
+private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel, enabled: Boolean) {
     var expanded by remember { mutableStateOf(false) }
     val selectAction = { o: SearchMode ->
         searchViewModel.updateSearchType(o)
@@ -174,7 +177,7 @@ private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel) {
 
     Column {
 
-        IconButton(onClick = { expanded = !expanded }) {
+        IconButton(onClick = { expanded = !expanded }, enabled = enabled) {
             Crossfade(targetState = searchViewModel.searchMode) {
                 Icon(
                     painterResource(it.icon),
@@ -313,6 +316,7 @@ fun IconInfoView(text: String, icon: (@Composable (Modifier) -> Unit)? = null) {
 @Composable
 fun DictionarySearchBar(
     searchString: String,
+    enabled: Boolean,
     onInputChanged: (String) -> Unit,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier
@@ -320,6 +324,7 @@ fun DictionarySearchBar(
     //Search bar
     OutlinedTextField(
         value = searchString,
+        enabled = enabled,
         onValueChange = onInputChanged,
         keyboardOptions = KeyboardOptions.Default.copy(
             imeAction = ImeAction.Search
@@ -336,7 +341,7 @@ fun DictionarySearchBar(
         },
         trailingIcon =
         {
-            IconButton(onClick = onSearch ) {
+            IconButton(onClick = onSearch, enabled = enabled) {
                 Icon(
                     imageVector = Icons.Filled.Search,
                     contentDescription = stringResource(R.string.search_description),

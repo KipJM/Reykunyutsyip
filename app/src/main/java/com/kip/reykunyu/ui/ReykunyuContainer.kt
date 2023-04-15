@@ -24,7 +24,9 @@ import kotlinx.coroutines.launch
 fun ReykunyuContainer() {
     val appViewModel: AppViewModel = viewModel()
 
-    val offlineDictViewModel: OfflineDictionaryViewModel = viewModel()
+    val offlineDictViewModel: OfflineDictionaryViewModel = viewModel(
+        factory = OfflineDictionaryViewModel.Factory
+    )
     val searchViewModel: DictionarySearchViewModel = viewModel()
     val preferenceViewModel: PreferenceViewModel = viewModel(
         factory = PreferenceViewModel.Factory

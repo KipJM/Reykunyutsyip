@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.kip.reykunyu.R
-import com.kip.reykunyu.data.api.AudioImageRepo
+import com.kip.reykunyu.data.api.AudioImageRepository
 import com.kip.reykunyu.data.dict.*
 import com.kip.reykunyu.data.offline.DictNavi
 import com.kip.reykunyu.ui.theme.Typography
@@ -363,7 +363,7 @@ private fun AudioChip(audio: Audio) {
                         .build()
                 )
                 mediaPlayer.setDataSource(context,
-                    AudioImageRepo.audioUrl.buildUpon().appendPath(audio.file).build()
+                    AudioImageRepository.audioUrl.buildUpon().appendPath(audio.file).build()
                 )
 
                 mediaPlayer.setOnErrorListener { mp, what, extra ->
@@ -520,7 +520,7 @@ fun ImageModule(
     ) {
         AsyncImage(
             model = ImageRequest.Builder(context = LocalContext.current)
-                .data(AudioImageRepo.imageUrl.buildUpon().appendPath(image).build().toString())
+                .data(AudioImageRepository.imageUrl.buildUpon().appendPath(image).build().toString())
                 .crossfade(true)
                 .build(),
             contentDescription = "A hand drawn illustration of $naviWord.",
