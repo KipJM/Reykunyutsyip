@@ -4,7 +4,6 @@ import android.util.Patterns
 import androidx.annotation.StringRes
 import androidx.compose.ui.text.AnnotatedString
 import com.kip.reykunyu.R
-import com.kip.reykunyu.data.online.RichTextComponentRaw
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

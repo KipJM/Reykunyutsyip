@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
-import retrofit2.http.Path
+import retrofit2.http.Query
 
 internal const val BASE_URL =
     "https://reykunyu.lu/api/"
@@ -16,19 +16,19 @@ private const val DICT_URL =
 
 @Deprecated("SEARCH is better")
 private const val LANG_LOOKUP_DEPRECATED =
-    "search?query={QUERY}&language={LANG}"
+    "search"
 
 
 //fwew search works both ways. Cool!
 private const val SEARCH =
-    "fwew-search?query={QUERY}&language={LANG}"
+    "fwew-search"
 
 
 private const val LANG_SUGGEST =
-    "suggest?query={QUERY}&language={LANG}"
+    "suggest"
 
 private const val NAVI_SUGGEST =
-    "mok?tìpawm"
+    "mok"
 
 
 data class Response<T>(
@@ -50,13 +50,13 @@ interface ReykunyuApiService {
     suspend fun getDictionary(): String
 
     @GET(SEARCH)
-    suspend fun search(@Path("QUERY") query: String, @Path("LANG") language: String): String
+    suspend fun search(@Query("query") query: String, @Query("language") language: String): String
 
     @GET(LANG_SUGGEST)
-    suspend fun suggestLang(@Path("QUERY") query: String, @Path("LANG") language: String): String
+    suspend fun suggestLang(@Query("query") query: String, @Query("language") language: String): String
 
     @GET(NAVI_SUGGEST)
-    suspend fun suggestNavi(@Path("QUERY") query: String, @Path("LANG") language: String): String
+    suspend fun suggestNavi(@Query("tìpawm") query: String, @Query("language") language: String): String
 
 }
 

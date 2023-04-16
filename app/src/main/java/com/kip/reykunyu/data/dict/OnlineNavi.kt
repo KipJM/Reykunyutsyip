@@ -1,19 +1,36 @@
-package com.kip.reykunyu.data.online
+package com.kip.reykunyu.data.dict
 
 import com.kip.reykunyu.data.dict.*
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
 
-@Serializable
+@Serializable(with = RichTextComponentRawSerializer::class)
 //Rich text component: Either plain text, or a Na'vi ref chip
 data class RichTextComponentRaw(
     val text: String? = null,
 
     // A special Na'vi structure that only has basic ref info,
-    // Thankfully no recursion loop will happen. This should be enforced on Reykunyu's side.
-    // If not, bad things WILL happen.
     val naviRef: OnlineNaviRaw? = null
 )
+
+@OptIn(ExperimentalSerializationApi::class)
+@Serializer(forClass = RichTextComponentRaw::class)
+object RichTextComponentRawSerializer : KSerializer<RichTextComponentRaw> {
+    override fun deserialize(decoder: Decoder): RichTextComponentRaw {
+        val json = (decoder as JsonDecoder).decodeJsonElement()
+
+        //Either it's a text(URL) element, or a Na'vi ref element
+        return try {
+            RichTextComponentRaw(text = Json.decodeFromString<String>(json.toString()))
+        } catch (e: Exception) {
+            RichTextComponentRaw(naviRef = Json.decodeFromString<OnlineNaviRaw>(json.toString()))
+        }
+
+    }
+}
+
 
 @Serializable
 data class OnlineNaviRaw(

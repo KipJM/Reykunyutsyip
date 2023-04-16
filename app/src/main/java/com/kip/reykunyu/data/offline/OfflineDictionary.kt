@@ -75,7 +75,7 @@ object OfflineDictionary {
             }
             catch (e: Exception)
             {
-                Log.wtf("REYKUNYU", e)
+                Log.e("REYKUNYU", e.toString())
                 return Response(ResponseStatus.Error, message = "Download error ($e)")
             }
         }
