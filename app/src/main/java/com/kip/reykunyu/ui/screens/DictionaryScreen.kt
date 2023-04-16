@@ -148,15 +148,26 @@ fun DictionaryScreen(
                                 is SearchState.SentenceSuccess -> TODO()
 
 
-                                is SearchState.Error -> IconInfoView(
-                                    text = stringResource(R.string.error) + "()"
-                                )
+                                is SearchState.Error -> {
+                                    var text = stringResource(R.string.error) + "(${state.info})"
+                                    var icon = painterResource(R.drawable.baseline_error_24)
+
+                                    when (state.id){
+                                        "COMING_SOON" -> {
+                                            text = state.info ?: "Coming soon!"
+                                            icon = painterResource(id = R.drawable.rhymes_24)
+                                        }
+                                    }
+                                    IconInfoView(
+                                        text = text, icon = {Icon(icon, null, modifier = it)}
+                                    )
+                                }
                             }
                         }
 
                     }
                     is OfflineDictState.Error -> {
-                        IconInfoView(text = stringResource(R.string.error))
+                        IconInfoView(text = stringResource(R.string.dictionary_error) + " (${dictState.message})")
                     }
                 }
             }

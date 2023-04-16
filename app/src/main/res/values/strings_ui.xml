@@ -69,5 +69,6 @@
         <b>Artwork</b> \n
         The drawings of Pandoran animals were made by Eana Unil. (Haven’t encountered one yet? Try searching for [toruk]!) Reykunyu’s logo was drawn by Eana Unil, and the calligraphy in the header was made by Nahura.
     </string>
+    <string name="dictionary_error">Encountered an error when trying to load dictionary!</string>
 
 </resources>

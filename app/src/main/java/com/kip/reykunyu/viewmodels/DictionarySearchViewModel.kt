@@ -18,7 +18,7 @@ sealed interface SearchState {
     data class AnnotatedSuccess(val result: TranslateResult) : SearchState //TODO: Proper results
 
 
-    data class Error(val info: String?) : SearchState
+    data class Error(val info: String?, val id: String? = null) : SearchState
 }
 
 
@@ -54,12 +54,28 @@ class DictionarySearchViewModel: ViewModel() {
         viewModelScope.launch {
             when (searchMode) {
                 SearchMode.Translate -> translate(true, language)
-                SearchMode.Sentence -> TODO()
-                SearchMode.Annotated -> TODO()
-                SearchMode.Rhymes -> TODO()
+                SearchMode.Sentence -> sentenceAnalysis()
+                SearchMode.Annotated -> annotatedDictionarySearch()
+                SearchMode.Rhymes -> rhymesSearch()
                 SearchMode.Offline -> translate(false, language)
             }
         }
+    }
+
+    private suspend fun sentenceAnalysis() {
+        comingSoonNotice()
+    }
+
+    private suspend fun annotatedDictionarySearch() {
+        comingSoonNotice()
+    }
+
+    private suspend fun rhymesSearch() {
+        comingSoonNotice()
+    }
+
+    private fun comingSoonNotice() {
+        searchState = SearchState.Error("Coming soon!", "COMING_SOON")
     }
 
     private suspend fun translate(online: Boolean, language: Language) {

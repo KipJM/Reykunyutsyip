@@ -18,7 +18,7 @@ sealed interface OfflineDictState {
     object NotLoaded : OfflineDictState
     object Loading : OfflineDictState
     object Loaded : OfflineDictState
-    object Error : OfflineDictState
+    data class Error(val message: String) : OfflineDictState
 }
 
 
@@ -37,7 +37,7 @@ class OfflineDictionaryViewModel(
             val response = OfflineDictionary.get(application.applicationContext)
             offlineDictState =
                 when(response.status) {
-                    ResponseStatus.Error -> OfflineDictState.Error
+                    ResponseStatus.Error -> OfflineDictState.Error(response.message ?: "")
                     ResponseStatus.Success -> OfflineDictState.Loaded
                 }
         }
