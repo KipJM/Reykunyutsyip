@@ -26,6 +26,7 @@ import com.kip.reykunyu.ui.components.RichTextComponent
 import com.kip.reykunyu.viewmodels.AppPreferenceState
 import com.kip.reykunyu.viewmodels.PreferenceViewModel
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
@@ -33,6 +34,7 @@ fun SettingsScreen(
     preferenceViewModel: PreferenceViewModel = viewModel(factory = PreferenceViewModel.Factory),
     openNavDrawerAction: () -> Unit = {}
 ) {
+    val noticeText = RichText.create(stringResource(R.string.notice_text))
     val creditsText = RichText.create(stringResource(R.string.credits_text))
     val infoText = RichText.create(stringResource(R.string.appinfo_text))
 
@@ -83,7 +85,13 @@ fun SettingsScreen(
                 }
 
                 item {
-                    SectionHeader(title = "Info & Credits")
+                    SectionHeader(title = "Info")
+                }
+
+                item {
+                    if (noticeText != null) {
+                        RichTextPanel(title = "Read me!", richText = noticeText)
+                    }
                 }
 
                 item {
