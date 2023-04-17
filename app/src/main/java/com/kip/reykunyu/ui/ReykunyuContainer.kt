@@ -45,7 +45,7 @@ fun ReykunyuContainer() {
                     Spacer(Modifier.height(28.dp))
                     //LOGO/HEADER
                     Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-                        Icon(painter = painterResource(id = R.drawable.reykunyu_logo)
+                        Icon(painter = painterResource(id = R.drawable.reykunyutsyip_dark)
                             , contentDescription = null)
                         /*Text(
                             text = stringResource(id = R.string.app_name),
