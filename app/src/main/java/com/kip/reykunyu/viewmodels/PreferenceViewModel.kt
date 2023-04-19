@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.kip.reykunyu.ReykunyuApplication
+import com.kip.reykunyu.ReykunyutsyipApplication
 import com.kip.reykunyu.data.app.AppPreferenceRepository
 import com.kip.reykunyu.data.dict.Language
 import kotlinx.coroutines.flow.SharingStarted
@@ -48,7 +48,7 @@ class PreferenceViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val application = (this[APPLICATION_KEY] as ReykunyuApplication)
+                val application = (this[APPLICATION_KEY] as ReykunyutsyipApplication)
                 PreferenceViewModel(application.appPreferenceRepository)
             }
         }

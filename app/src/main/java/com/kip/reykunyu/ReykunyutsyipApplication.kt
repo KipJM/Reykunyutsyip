@@ -13,7 +13,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     name = APP_PREFERENCES_NAME
 )
 
-class ReykunyuApplication: Application() {
+class ReykunyutsyipApplication: Application() {
     lateinit var appPreferenceRepository: AppPreferenceRepository
 
     override fun onCreate() {
