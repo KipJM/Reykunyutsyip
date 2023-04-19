@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.kip.reykunyu.ReykunyuApplication
+import com.kip.reykunyu.ReykunyutsyipApplication
 import com.kip.reykunyu.data.api.ResponseStatus
 import com.kip.reykunyu.data.offline.OfflineDictionary
 import kotlinx.coroutines.launch
@@ -46,7 +46,7 @@ class OfflineDictionaryViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ReykunyuApplication)
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ReykunyutsyipApplication)
                 OfflineDictionaryViewModel(application)
             }
         }

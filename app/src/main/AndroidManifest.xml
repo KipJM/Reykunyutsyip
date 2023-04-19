@@ -8,19 +8,19 @@
     <!--END-->
 
     <application
-        android:name="com.kip.reykunyu.ReykunyuApplication"
+        android:name="com.kip.reykunyu.ReykunyutsyipApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Reykunyu"
+        android:theme="@style/Theme.Reykunyutsyip"
         tools:targetApi="31">
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Reykunyu">
+            android:theme="@style/Theme.Reykunyutsyip">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
