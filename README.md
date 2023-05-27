@@ -5,6 +5,7 @@
 ### An **unofficial** Android client for the [Reykunyu Na'vi dictionary](https://reykunyu.lu)
 Reykunyu - someone who lets you discover things  
 Reykunyutsyìp - Little Reykunyu :)  
+### Download here: https://github.com/kipjm/reykunyutsyip/releases/latest
 
 ## Info
 Reykunyutsyìp is an UNOFFICIAL Android client of Reykunyu. It is made by Kip, and is not affiliated with Reykunyu.
@@ -30,7 +31,7 @@ I hope you enjoy the app!
 Go to https://github.com/kipjm/reykunyutsyip/releases to download the newest APK release.
 In the future I will try to work on a proper app store release somehow!
 
-**If you got a warning from Google saying that the app is unverified, it's because I haven't uploaded it to Google Play yet! Tap “learn more” and choose “Install anyway” for now. Check for viruses if you want!**
+**If you got a warning from Google saying that the app is unverified, it's because I haven't uploaded it to Google Play yet. Tap “learn more” and choose “Install anyway” for now. The app doesn't contain malware, you can check if you want!**
 
 
 ## Screenshots
