@@ -16,7 +16,7 @@ class OnlineTranslateSearch : TranslateSearchProvider{
             Log.e("REYKUNYU", e.toString())
             return TranslateResult(SearchResultStatus.Error, emptyList(), emptyList(), info = "Encountered error when trying to communicate with Reykunyu")
         }
-        Log.i("REYKUNYU", searchJson)
+        //Log.i("REYKUNYU", searchJson)
 
         //Parses json to internal data structure
         return convertTranslationResult(searchJson)
@@ -41,6 +41,7 @@ class OnlineTranslateSearch : TranslateSearchProvider{
             return TranslateResult(SearchResultStatus.Success, fromNavi, toNavi)
         }
         catch (e: Exception) {
+            Log.e("REYKUNYU", e.toString())
             return TranslateResult(SearchResultStatus.Error, emptyList(), emptyList())
         }
 

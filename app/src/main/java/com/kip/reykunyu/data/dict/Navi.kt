@@ -145,7 +145,7 @@ data class RichText(
             .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
 
-        fun create(raw: List<RichTextComponentRaw>?): RichText? {
+        fun create(raw: List<RichTextPartitionRaw>?): RichText? {
             if(raw == null) {
                 return null
             }

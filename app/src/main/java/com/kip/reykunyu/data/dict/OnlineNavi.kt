@@ -8,7 +8,7 @@ import kotlinx.serialization.json.JsonDecoder
 
 @Serializable(with = RichTextComponentRawSerializer::class)
 //Rich text component: Either plain text, or a Na'vi ref chip
-data class RichTextComponentRaw(
+data class RichTextPartitionRaw(
     val text: String? = null,
 
     // A special Na'vi structure that only has basic ref info,
@@ -16,16 +16,16 @@ data class RichTextComponentRaw(
 )
 
 @OptIn(ExperimentalSerializationApi::class)
-@Serializer(forClass = RichTextComponentRaw::class)
-object RichTextComponentRawSerializer : KSerializer<RichTextComponentRaw> {
-    override fun deserialize(decoder: Decoder): RichTextComponentRaw {
+@Serializer(forClass = RichTextPartitionRaw::class)
+object RichTextComponentRawSerializer : KSerializer<RichTextPartitionRaw> {
+    override fun deserialize(decoder: Decoder): RichTextPartitionRaw {
         val json = (decoder as JsonDecoder).decodeJsonElement()
 
         //Either it's a text(URL) element, or a Na'vi ref element
         return try {
-            RichTextComponentRaw(text = Json.decodeFromString<String>(json.toString()))
+            RichTextPartitionRaw(text = Json.decodeFromString<String>(json.toString()))
         } catch (e: Exception) {
-            RichTextComponentRaw(naviRef = Json.decodeFromString<OnlineNaviRaw>(json.toString()))
+            RichTextPartitionRaw(naviRef = Json.decodeFromString<OnlineNaviRaw>(json.toString()))
         }
 
     }
@@ -40,14 +40,16 @@ data class OnlineNaviRaw(
     val wordType: String,
 
     val translations: List<Map<String, String>>,
+    val short_translation: String? = null,
+
     val pronunciation: List<Pronunciation>? = null,
 
     val infixes: String? = null,
 
-    val meaning_note: List<String>? = null,
-    val etymology: List<RichTextComponentRaw>? = null,
+    val meaning_note: List<RichTextPartitionRaw>? = null,
+    val etymology: List<RichTextPartitionRaw>? = null,
 
-    val seeAlso: List<String>? = null,
+    val seeAlso: List<OnlineNaviRaw>? = null,
     val derived: List<OnlineNaviRaw>? = null,
 
     val image: String? = null,
@@ -83,15 +85,22 @@ data class OnlineNaviRaw(
         }
 
 
+        val convertedMeaningNote = RichText.create(meaning_note)
+        val meaningNoteList =
+            if(convertedMeaningNote != null)
+            { listOf(convertedMeaningNote)
+            } else { null }
+
+
         return Navi(
             word = word,
             type = wordType,
             translations = outputTranslation.toList(),
             pronunciation = pronunciation,
             infixes = infixes,
-            meaning_note = meaning_note?.mapNotNull { o -> RichText.create(o) },
+            meaning_note = meaningNoteList,
             etymology = RichText.create(etymology),
-            seeAlso = null,
+            seeAlso = seeAlso?.map { o -> o.navi },
             derived = derived?.map { o -> o.navi },
             image = image,
             status = status,
