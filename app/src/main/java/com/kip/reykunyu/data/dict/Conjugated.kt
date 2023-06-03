@@ -21,9 +21,9 @@ data class ConjugatedElementRaw(
 
     // https://github.com/Willem3141/navi-reykunyu/blob/master/fraporu/ayvefya/reykunyu.js#L146
     companion object {
-        fun createExplainations(raw: List<ConjugatedElementRaw>): List<ConjugatedExplaination> {
+        fun createExplanations(raw: List<ConjugatedElementRaw>): List<ConjugatedExplanation> {
 
-            val explainations = mutableListOf<ConjugatedExplaination>()
+            val explanations = mutableListOf<ConjugatedExplanation>()
 
             for (element in raw) {
 
@@ -36,7 +36,7 @@ data class ConjugatedElementRaw(
                     continue
                 }
 
-                val explaination: ConjugatedExplaination = when (element.type)
+                val explanation: ConjugatedExplanation = when (element.type)
                 {
                     "n" -> {
                         explainNoun(conjugation)
@@ -75,17 +75,17 @@ data class ConjugatedElementRaw(
                     }
                 }
 
-                explainations.add(explaination)
+                explanations.add(explanation)
 
             }
-            return explainations
+            return explanations
         }
 
 
         //region Conversion parsing
 
-        private fun explainNoun(conjugation: Conjugation): ConjugatedExplaination {
-            val partitions = mutableListOf<ConjugatedExplaination.Partition>()
+        private fun explainNoun(conjugation: Conjugation): ConjugatedExplanation {
+            val partitions = mutableListOf<ConjugatedExplanation.Partition>()
             val affixes = conjugation.affixes!!
 
 
@@ -93,22 +93,22 @@ data class ConjugatedElementRaw(
 
                 if (affixes[i].isNotBlank()) {
                     partitions.add(
-                        ConjugatedExplaination.Partition
+                        ConjugatedExplanation.Partition
                         (
-                            ConjugatedExplaination.Partition.Type.Prefix, affixes[i])
+                            ConjugatedExplanation.Partition.Type.Prefix, affixes[i])
                     )
                 }
             }
 
-            partitions.add(ConjugatedExplaination.Partition
-                (ConjugatedExplaination.Partition.Type.Root, conjugation.root)
+            partitions.add(ConjugatedExplanation.Partition
+                (ConjugatedExplanation.Partition.Type.Root, conjugation.root)
             )
 
             for (i in 3..6 ) {
                 if (affixes[i].isNotBlank()) {
-                    partitions.add(ConjugatedExplaination.Partition
+                    partitions.add(ConjugatedExplanation.Partition
                         (
-                        ConjugatedExplaination.Partition.Type.Suffix, affixes[i])
+                        ConjugatedExplanation.Partition.Type.Suffix, affixes[i])
                     )
                 }
             }
@@ -116,29 +116,29 @@ data class ConjugatedElementRaw(
 
             // Correction & Result
             if (!conjugation.correction.isNullOrBlank()) {
-                partitions.add(ConjugatedExplaination.Partition
+                partitions.add(ConjugatedExplanation.Partition
                     (
-                    ConjugatedExplaination.Partition.Type.Correction, conjugation.correction)
+                    ConjugatedExplanation.Partition.Type.Correction, conjugation.correction)
                 )
             }
 
-            return ConjugatedExplaination(partitions, conjugation.result, null);
+            return ConjugatedExplanation(partitions, conjugation.result, null);
         }
 
-        private fun explainVerb(conjugation: Conjugation): ConjugatedExplaination {
-            val partitions = mutableListOf<ConjugatedExplaination.Partition>()
+        private fun explainVerb(conjugation: Conjugation): ConjugatedExplanation {
+            val partitions = mutableListOf<ConjugatedExplanation.Partition>()
             val infixes = conjugation.infixes!!
 
 
-            partitions.add(ConjugatedExplaination.Partition
-                (ConjugatedExplaination.Partition.Type.Root, conjugation.root)
+            partitions.add(ConjugatedExplanation.Partition
+                (ConjugatedExplanation.Partition.Type.Root, conjugation.root)
             )
 
             for (i in 0..2) {
                 if (infixes[i].isNotBlank()) {
-                    partitions.add(ConjugatedExplaination.Partition
+                    partitions.add(ConjugatedExplanation.Partition
                         (
-                        ConjugatedExplaination.Partition.Type.Infix, infixes[i])
+                        ConjugatedExplanation.Partition.Type.Infix, infixes[i])
                     )
                 }
             }
@@ -146,105 +146,105 @@ data class ConjugatedElementRaw(
 
             // Correction & Result
             if (!conjugation.correction.isNullOrBlank()) {
-                partitions.add(ConjugatedExplaination.Partition
+                partitions.add(ConjugatedExplanation.Partition
                     (
-                    ConjugatedExplaination.Partition.Type.Correction, conjugation.correction)
+                    ConjugatedExplanation.Partition.Type.Correction, conjugation.correction)
                 )
             }
 
-            return ConjugatedExplaination(partitions, conjugation.result, null);
+            return ConjugatedExplanation(partitions, conjugation.result, null);
         }
 
-        private fun explainAdjective(conjugation: Conjugation): ConjugatedExplaination {
-            val partitions = mutableListOf<ConjugatedExplaination.Partition>()
+        private fun explainAdjective(conjugation: Conjugation): ConjugatedExplanation {
+            val partitions = mutableListOf<ConjugatedExplanation.Partition>()
 
             if (conjugation.form == "postnoun") {
-                partitions.add(ConjugatedExplaination.Partition
+                partitions.add(ConjugatedExplanation.Partition
                     (
-                    ConjugatedExplaination.Partition.Type.Prefix, "a")
+                    ConjugatedExplanation.Partition.Type.Prefix, "a")
                 )
             }
 
-            partitions.add(ConjugatedExplaination.Partition
-                (ConjugatedExplaination.Partition.Type.Root, conjugation.root)
+            partitions.add(ConjugatedExplanation.Partition
+                (ConjugatedExplanation.Partition.Type.Root, conjugation.root)
             )
 
             if (conjugation.form == "prenoun") {
-                partitions.add(ConjugatedExplaination.Partition
+                partitions.add(ConjugatedExplanation.Partition
                     (
-                    ConjugatedExplaination.Partition.Type.Suffix, "a")
+                    ConjugatedExplanation.Partition.Type.Suffix, "a")
                 )
             }
 
 
             // Correction & Result
             if (!conjugation.correction.isNullOrBlank()) {
-                partitions.add(ConjugatedExplaination.Partition
+                partitions.add(ConjugatedExplanation.Partition
                     (
-                    ConjugatedExplaination.Partition.Type.Correction, conjugation.correction)
+                    ConjugatedExplanation.Partition.Type.Correction, conjugation.correction)
                 )
             }
 
-            return ConjugatedExplaination(partitions, conjugation.result, null);
+            return ConjugatedExplanation(partitions, conjugation.result, null);
         }
 
-        private fun explainVerbToNoun(conjugation: Conjugation): ConjugatedExplaination {
-            val partitions = mutableListOf<ConjugatedExplaination.Partition>()
+        private fun explainVerbToNoun(conjugation: Conjugation): ConjugatedExplanation {
+            val partitions = mutableListOf<ConjugatedExplanation.Partition>()
 
-            partitions.add(ConjugatedExplaination.Partition
-                (ConjugatedExplaination.Partition.Type.Root, conjugation.root)
+            partitions.add(ConjugatedExplanation.Partition
+                (ConjugatedExplanation.Partition.Type.Root, conjugation.root)
             )
 
-            partitions.add(ConjugatedExplaination.Partition
+            partitions.add(ConjugatedExplanation.Partition
                 (
-                ConjugatedExplaination.Partition.Type.Suffix, conjugation.affixes!![0])
+                ConjugatedExplanation.Partition.Type.Suffix, conjugation.affixes!![0])
             )
 
-            return ConjugatedExplaination(partitions, conjugation.result, "n");
+            return ConjugatedExplanation(partitions, conjugation.result, "n");
         }
 
-        private fun explainVerbToAdjective(conjugation: Conjugation): ConjugatedExplaination {
-            val partitions = mutableListOf<ConjugatedExplaination.Partition>()
+        private fun explainVerbToAdjective(conjugation: Conjugation): ConjugatedExplanation {
+            val partitions = mutableListOf<ConjugatedExplanation.Partition>()
 
-            partitions.add(ConjugatedExplaination.Partition
+            partitions.add(ConjugatedExplanation.Partition
                 (
-                ConjugatedExplaination.Partition.Type.Prefix, conjugation.affixes!![0])
+                ConjugatedExplanation.Partition.Type.Prefix, conjugation.affixes!![0])
             )
 
-            partitions.add(ConjugatedExplaination.Partition
-                (ConjugatedExplaination.Partition.Type.Root, conjugation.root)
+            partitions.add(ConjugatedExplanation.Partition
+                (ConjugatedExplanation.Partition.Type.Root, conjugation.root)
             )
 
 
-            return ConjugatedExplaination(partitions, conjugation.result, "adj");
+            return ConjugatedExplanation(partitions, conjugation.result, "adj");
         }
 
-        private fun explainVerbToParticiple(conjugation: Conjugation): ConjugatedExplaination {
-            val partitions = mutableListOf<ConjugatedExplaination.Partition>()
+        private fun explainVerbToParticiple(conjugation: Conjugation): ConjugatedExplanation {
+            val partitions = mutableListOf<ConjugatedExplanation.Partition>()
 
-            partitions.add(ConjugatedExplaination.Partition
-                (ConjugatedExplaination.Partition.Type.Root, conjugation.root)
+            partitions.add(ConjugatedExplanation.Partition
+                (ConjugatedExplanation.Partition.Type.Root, conjugation.root)
             )
 
-            partitions.add(ConjugatedExplaination.Partition
-                (ConjugatedExplaination.Partition.Type.Infix, conjugation.affixes!![0])
+            partitions.add(ConjugatedExplanation.Partition
+                (ConjugatedExplanation.Partition.Type.Infix, conjugation.affixes!![0])
             )
 
-            return ConjugatedExplaination(partitions, conjugation.result, "adj");
+            return ConjugatedExplanation(partitions, conjugation.result, "adj");
         }
 
-        private fun explainAdjectiveToVerb(conjugation: Conjugation): ConjugatedExplaination {
-            val partitions = mutableListOf<ConjugatedExplaination.Partition>()
+        private fun explainAdjectiveToVerb(conjugation: Conjugation): ConjugatedExplanation {
+            val partitions = mutableListOf<ConjugatedExplanation.Partition>()
 
-            partitions.add(ConjugatedExplaination.Partition
-                (ConjugatedExplaination.Partition.Type.Prefix, conjugation.affixes!![0])
+            partitions.add(ConjugatedExplanation.Partition
+                (ConjugatedExplanation.Partition.Type.Prefix, conjugation.affixes!![0])
             )
 
-            partitions.add(ConjugatedExplaination.Partition
-                (ConjugatedExplaination.Partition.Type.Root, conjugation.root)
+            partitions.add(ConjugatedExplanation.Partition
+                (ConjugatedExplanation.Partition.Type.Root, conjugation.root)
             )
 
-            return ConjugatedExplaination(partitions, conjugation.result, "adv");
+            return ConjugatedExplanation(partitions, conjugation.result, "adv");
         }
         //endregion
 
@@ -252,9 +252,9 @@ data class ConjugatedElementRaw(
 }
 
 
-data class ConjugatedExplaination(
+data class ConjugatedExplanation(
     val formula: List<Partition>,
-    val word: List<String>,
+    val words: List<String>,
     val type: String?
 ) {
     data class Partition(

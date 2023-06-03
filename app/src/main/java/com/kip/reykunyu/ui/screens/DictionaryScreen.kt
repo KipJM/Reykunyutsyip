@@ -375,7 +375,10 @@ fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, 
     // 2 Pages: From Na'vi words and [Language] to Na'vi words
     val initPage = if (fromNavi.isEmpty() && toNavi.isNotEmpty()) { 1 } else { 0 }
 
-    val state = rememberPagerState(initialPage = initPage)
+    val state = rememberPagerState(
+        initialPage = initPage,
+        initialPageOffsetFraction = 0f
+    ) { /*Pagecount */ 2 }
 
     val titles = listOf(
         "Na\'vi to Lang (${fromNavi.sumOf { it.second.size }})",
@@ -400,7 +403,7 @@ fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, 
         }
 
         Surface{
-            HorizontalPager(pageCount = 2, state = state, pageSpacing = 10.dp,
+            HorizontalPager(state = state, pageSpacing = 10.dp,
                 userScrollEnabled = fromNavi.size <= 1
             ) { o ->
                 when (o) {
@@ -430,7 +433,13 @@ fun FromNaviList(
         return
     }
 
-    val state = rememberPagerState(initialPage = 0) //chosen word index
+    val state = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f
+    ) {
+        // provide pageCount
+        fromNavi.size
+    } //chosen word index
     val coroutineScope = rememberCoroutineScope()
 
     val indicator = @Composable { tabPositions: List<TabPosition> ->
@@ -461,7 +470,7 @@ fun FromNaviList(
             .fillMaxWidth()
         )
 
-        HorizontalPager(pageCount = fromNavi.size, state=state) {
+        HorizontalPager(state=state) {
             NaviList(naviList = fromNavi[it].second, language = language, naviAction = naviAction)
         }
 

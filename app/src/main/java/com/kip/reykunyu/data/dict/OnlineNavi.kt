@@ -80,7 +80,7 @@ data class OnlineNaviRaw(
             status = status,
             status_note = RichText.create(status_note),
             source = Source.createList(source),
-            conjugatedExplanation = if(conjugated != null) { ConjugatedElementRaw.createExplainations(conjugated) } else { null }
+            conjugatedExplanation = if(conjugated != null) { ConjugatedElementRaw.createExplanations(conjugated) } else { null }
         )
     }
 }

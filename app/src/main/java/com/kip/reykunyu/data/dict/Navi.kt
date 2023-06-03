@@ -189,7 +189,7 @@ data class Navi(
     val translations: List<Map<Language, String>>,
     val pronunciation: List<Pronunciation>?,
 
-    val conjugatedExplanation: List<ConjugatedExplaination>?,
+    val conjugatedExplanation: List<ConjugatedExplanation>?,
 
     val infixes: String?,
 

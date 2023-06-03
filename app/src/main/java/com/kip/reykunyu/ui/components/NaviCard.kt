@@ -13,7 +13,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
@@ -71,7 +70,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
         Column {
             //Navi + Info
             FlowRow(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(horizontal = 17.dp, vertical = 7.dp)
             ) {
 
@@ -85,8 +84,8 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                 )
 
                 // WordType
-                var showTypeInfo by remember { mutableStateOf(false) }
                 Spacer(modifier = Modifier.padding(5.dp))
+                var showTypeInfo by remember { mutableStateOf(false) }
                 Card(
                     onClick = {
                         showTypeInfo = !showTypeInfo
@@ -200,30 +199,150 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
 
                     AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
 
-                    // Conjugation explaination
+                    // Conjugation explanation
                     if (navi.conjugatedExplanation != null) {
 
-                        Spacer(Modifier.padding(5.dp))
+                        Spacer(Modifier.padding(8.dp))
                         Text(
                             text = "CONJUGATIONS",
                             style = labelLarge,
                             modifier = Modifier.padding(horizontal = 20.dp)
                         )
 
+                        val conjugationTextStyle = Typography.titleLarge.copy(fontSize = 24.sp)
+
                         for (explanation in navi.conjugatedExplanation) {
-                            FlowRow {
-                                Box(
-                                    modifier = Modifier.size(100.dp).clip(CircleShape)
-                                )
-                                for (partition in explanation.formula) {
+                            FlowRow(
+                                modifier = Modifier.padding(horizontal = 20.dp),
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                /*Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Icon(Icons.Filled.KeyboardArrowRight, null)
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }*/
+
+                                explanation.formula.forEachIndexed{ index, partition ->
                                     when (partition.type) {
-                                        ConjugatedExplaination.Partition.Type.Prefix -> {
-                                            //Text()
+                                        ConjugatedExplanation.Partition.Type.Prefix -> {
+                                            PlainTooltipBox(tooltip = { Text("Prefix") }) {
+                                                Text(
+                                                    text = partition.content,
+                                                    style = conjugationTextStyle,
+                                                    color = MaterialTheme.colorScheme.secondary,
+                                                    modifier = Modifier.tooltipTrigger()
+                                                )
+                                            }
                                         }
-                                        ConjugatedExplaination.Partition.Type.Root -> {}
-                                        ConjugatedExplaination.Partition.Type.Suffix -> {}
-                                        ConjugatedExplaination.Partition.Type.Infix -> {}
-                                        ConjugatedExplaination.Partition.Type.Correction -> {}
+                                        ConjugatedExplanation.Partition.Type.Root -> {
+                                            Text(
+                                                text = partition.content,
+                                                style = conjugationTextStyle
+                                            )
+                                        }
+                                        ConjugatedExplanation.Partition.Type.Suffix -> {
+                                            PlainTooltipBox(tooltip = {Text("Suffix")}) {
+                                                Text(
+                                                    text = partition.content,
+                                                    style = conjugationTextStyle,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.tooltipTrigger()
+                                                )
+                                            }
+                                        }
+                                        ConjugatedExplanation.Partition.Type.Infix -> {
+                                            PlainTooltipBox(tooltip = {Text("Infix")}) {
+                                                Text(
+                                                    text = partition.content,
+                                                    style = conjugationTextStyle,
+                                                    color = MaterialTheme.colorScheme.tertiary,
+                                                    modifier = Modifier.tooltipTrigger()
+                                                )
+                                            }
+                                        }
+                                        ConjugatedExplanation.Partition.Type.Correction -> {
+                                            Text(
+                                                text = partition.content,
+                                                style = conjugationTextStyle,
+                                                color = MaterialTheme.colorScheme.error,
+                                                textDecoration = TextDecoration.LineThrough
+                                            )
+                                        }
+                                    }
+
+                                    if (partition.type == ConjugatedExplanation.Partition.Type.Correction) {
+                                        Text(
+                                            text = " ",
+                                            style = conjugationTextStyle
+                                        )
+                                    } else if (
+                                        explanation.formula.count() == index + 2 &&
+                                        explanation.formula.last().type == ConjugatedExplanation.Partition.Type.Correction
+                                    ) {
+                                        //The correction is on the other side of equal sign
+                                        Text(
+                                            text = " = ",
+                                            style = conjugationTextStyle
+                                        )
+                                    } else if (index == explanation.formula.count() - 1) {
+                                        //Last one
+                                        Text(
+                                            text = " = ",
+                                            style = conjugationTextStyle
+                                        )
+                                    } else {
+                                        Text(
+                                            text = " + ",
+                                            style = conjugationTextStyle
+                                        )
+                                    }
+                                }
+
+                                //Word display
+                                explanation.words.forEachIndexed { index, word ->
+                                    Text(
+                                        text = word,
+                                        style = conjugationTextStyle
+                                    )
+                                    if (index + 2 <= explanation.words.count()) {
+                                        Text(
+                                            text = " / ",
+                                            style = conjugationTextStyle,
+                                            color = MaterialTheme.colorScheme.secondary
+                                        )
+                                    }
+                                }
+
+                                //optional type display
+                                if (explanation.type != null) {
+                                    var showTypeInfo by remember { mutableStateOf(false) }
+                                    Card(
+                                        onClick = {
+                                            showTypeInfo = !showTypeInfo
+                                        }
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .padding(horizontal = 8.dp)
+                                        ){
+                                            AnimatedContent(targetState = showTypeInfo) { show ->
+                                                if (show) {
+                                                    Text(
+                                                        text = stringResource(id = typeInfoMap[explanation.type] ?: R.string.unknown),
+                                                        maxLines = 2,
+                                                        overflow = TextOverflow.Ellipsis,
+                                                        style = MaterialTheme.typography.displaySmall
+                                                            .copy(fontSize = 20.sp)
+                                                    )
+                                                }else {
+                                                    Text(
+                                                        text = typeMap[explanation.type] ?: "?",
+                                                        style = MaterialTheme.typography.displaySmall
+                                                            .copy(fontSize = 20.sp)
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -522,6 +641,7 @@ fun TextModule(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageModule(
     image: String?,
@@ -618,7 +738,7 @@ fun RichTextComponent(
 
     FlowRow(
         modifier = if (padding) Modifier.padding(horizontal = 20.dp) else Modifier,
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.Center
     ) {
         //Rich Text
         for (component in richText.sequence) {
@@ -865,37 +985,37 @@ fun NaviCardPreview() {
             }
             NaviCard(item.toNavi().copy(
                 conjugatedExplanation = listOf(
-                    ConjugatedExplaination(
+                    ConjugatedExplanation(
                     formula=listOf(
-                        ConjugatedExplaination.Partition(
-                        type = ConjugatedExplaination.Partition.Type.Prefix,
+                        ConjugatedExplanation.Partition(
+                        type = ConjugatedExplanation.Partition.Type.Prefix,
                         content = "tsa"
-                    ), ConjugatedExplaination.Partition(
-                        type = ConjugatedExplaination.Partition.Type.Prefix,
+                    ), ConjugatedExplanation.Partition(
+                        type = ConjugatedExplanation.Partition.Type.Prefix,
                         content = "me"
-                    ), ConjugatedExplaination.Partition(
-                        type = ConjugatedExplaination.Partition.Type.Root,
+                    ), ConjugatedExplanation.Partition(
+                        type = ConjugatedExplanation.Partition.Type.Root,
                         content = "tute"
-                    ), ConjugatedExplaination.Partition(
-                            type = ConjugatedExplaination.Partition.Type.Suffix,
+                    ), ConjugatedExplanation.Partition(
+                            type = ConjugatedExplanation.Partition.Type.Suffix,
                             content = "r"
                     )),
-                    word = listOf("tsamesuteru", "tsamesuter"),
+                    words = listOf("tsamesuteru", "tsamesuter"),
                     type = "n"
                     ),
-                    ConjugatedExplaination(
+                    ConjugatedExplanation(
                         formula=listOf(
-                        ConjugatedExplaination.Partition(
-                            type = ConjugatedExplaination.Partition.Type.Root,
+                        ConjugatedExplanation.Partition(
+                            type = ConjugatedExplanation.Partition.Type.Root,
                             content = "tute"
-                        ), ConjugatedExplaination.Partition(
-                            type = ConjugatedExplaination.Partition.Type.Infix,
+                        ), ConjugatedExplanation.Partition(
+                            type = ConjugatedExplanation.Partition.Type.Infix,
                             content = "adas"
-                        ), ConjugatedExplaination.Partition(
-                                type = ConjugatedExplaination.Partition.Type.Correction,
+                        ), ConjugatedExplanation.Partition(
+                                type = ConjugatedExplanation.Partition.Type.Correction,
                                 content = "hmmmmijioì"
                             )),
-                    word = listOf("tuiiioiasda", "tfer"),
+                    words = listOf("tuiiioiasda", "tfer"),
                     type = "n"
                 )
 
