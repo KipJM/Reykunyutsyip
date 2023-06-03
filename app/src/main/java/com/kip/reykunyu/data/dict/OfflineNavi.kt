@@ -125,11 +125,12 @@ data class DictNavi(
                 it.removePrefix("[").removeSuffix("]").
                 split(':', ignoreCase = true)[0]
             },
-            derived = null,
+            derived = null, //Only available for online
             image = image,
             status = status,
             status_note = RichText.create(status_note),
             source = Source.createList(source),
+            conjugatedExplanation = null //Only available for online
         )
     }
 }

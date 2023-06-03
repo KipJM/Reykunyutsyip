@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -189,6 +191,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                 Column {
                     //meaning note
                     if (navi.meaning_note != null) {
+
                         for (note in navi.meaning_note){
                             RichTextComponent(richText = note, naviClick = naviClick)
                         }
@@ -197,6 +200,35 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
 
                     AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
 
+                    // Conjugation explaination
+                    if (navi.conjugatedExplanation != null) {
+
+                        Spacer(Modifier.padding(5.dp))
+                        Text(
+                            text = "CONJUGATIONS",
+                            style = labelLarge,
+                            modifier = Modifier.padding(horizontal = 20.dp)
+                        )
+
+                        for (explanation in navi.conjugatedExplanation) {
+                            FlowRow {
+                                Box(
+                                    modifier = Modifier.size(100.dp).clip(CircleShape)
+                                )
+                                for (partition in explanation.formula) {
+                                    when (partition.type) {
+                                        ConjugatedExplaination.Partition.Type.Prefix -> {
+                                            //Text()
+                                        }
+                                        ConjugatedExplaination.Partition.Type.Root -> {}
+                                        ConjugatedExplaination.Partition.Type.Suffix -> {}
+                                        ConjugatedExplaination.Partition.Type.Infix -> {}
+                                        ConjugatedExplaination.Partition.Type.Correction -> {}
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     //etymology
                     RichInfoModule(
@@ -788,7 +820,9 @@ fun SourcesCard(
 
 
 
-@Preview
+@Preview(device = "id:pixel_6_pro",
+    wallpaper = Wallpapers.RED_DOMINATED_EXAMPLE
+)
 @Composable
 fun NaviCardPreview() {
     val naviList = listOf<DictNavi>(
@@ -817,19 +851,58 @@ fun NaviCardPreview() {
             ),
             etymology = "Shortened form of ['eveng:n]. https://www.wikipedia.com",
             infixes = "h.angh.am",
-            meaning_note = null/*"Used together with [zun:conj]. Check out reykunyu.lu and [skxawng:n]!"*/,
+            meaning_note = "Used together with [zun:conj]. Check out reykunyu.lu and [skxawng:n]!",
             seeAlso = listOf("oeng:pn", "oe:pn"),
             status = "unconfirmed",
             status_note = "Not yet officially confirmed by Pawl.",
-            image = "toruk.png"
+            image = "toruk.png",
         )
     )
     LazyColumn {
         items(items = naviList) { item ->
             var expanded by remember {
-                mutableStateOf(false)
+                mutableStateOf(true)
             }
-            NaviCard(item.toNavi(), Language.English, {}, expanded, {expanded = !expanded})
+            NaviCard(item.toNavi().copy(
+                conjugatedExplanation = listOf(
+                    ConjugatedExplaination(
+                    formula=listOf(
+                        ConjugatedExplaination.Partition(
+                        type = ConjugatedExplaination.Partition.Type.Prefix,
+                        content = "tsa"
+                    ), ConjugatedExplaination.Partition(
+                        type = ConjugatedExplaination.Partition.Type.Prefix,
+                        content = "me"
+                    ), ConjugatedExplaination.Partition(
+                        type = ConjugatedExplaination.Partition.Type.Root,
+                        content = "tute"
+                    ), ConjugatedExplaination.Partition(
+                            type = ConjugatedExplaination.Partition.Type.Suffix,
+                            content = "r"
+                    )),
+                    word = listOf("tsamesuteru", "tsamesuter"),
+                    type = "n"
+                    ),
+                    ConjugatedExplaination(
+                        formula=listOf(
+                        ConjugatedExplaination.Partition(
+                            type = ConjugatedExplaination.Partition.Type.Root,
+                            content = "tute"
+                        ), ConjugatedExplaination.Partition(
+                            type = ConjugatedExplaination.Partition.Type.Infix,
+                            content = "adas"
+                        ), ConjugatedExplaination.Partition(
+                                type = ConjugatedExplaination.Partition.Type.Correction,
+                                content = "hmmmmijioì"
+                            )),
+                    word = listOf("tuiiioiasda", "tfer"),
+                    type = "n"
+                )
+
+
+                ))
+                , Language.English, {}, expanded, {expanded = !expanded}
+            )
         }
     }
 }

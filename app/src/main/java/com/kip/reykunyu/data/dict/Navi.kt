@@ -120,159 +120,6 @@ data class Audio(
 )
 
 
-data class RichText(
-    val sequence: List<Partition>
-) {
-    data class Partition(
-        val type: Type,
-        val text: String? = null,
-        val navi: String? = null,
-        val urlDisplay: AnnotatedString? = null,
-        val url: String? = null
-    ) {
-        enum class Type {
-            Text,
-            Url,
-            Navi,
-            Space
-        }
-    }
-
-    companion object{
-
-        @Suppress("RegExpRedundantEscape")
-        val spaceRegex = """((?<=[ \n\(])|(?=[ \n\)]))"""
-            .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-
-
-        fun create(raw: List<RichTextPartitionRaw>?): RichText? {
-            if(raw == null) {
-                return null
-            }
-
-            val sequence = mutableListOf<Partition>()
-
-            for (partition in raw) {
-                //Na'vi
-                if (partition.naviRef != null) {
-                    sequence.add(Partition(Partition.Type.Navi,
-                        navi = partition.naviRef.navi))
-                    continue
-                }
-
-                /*
-                * TODO: For some reason text won't wrap with the Na'vi chips. For now
-                *  I'm going to force the text to wrap by splitting every word :/
-                */
-                // TEXT or URL
-                if (partition.text != null) {
-                    for (words in spaceRegex.split(partition.text)) {
-                        when {
-                            //URL
-                            Patterns.WEB_URL.matcher(words).matches() -> {
-                                sequence.add(
-                                    Partition(
-                                        Partition.Type.Url,
-                                        urlDisplay = AnnotatedString(text = words),
-                                        url = words
-                                    )
-                                )
-                            }
-
-                            //Space
-                            words.isBlank() ->
-                                sequence.add(Partition(Partition.Type.Space, words))
-
-                            //Text
-                            else ->
-                                sequence.add(Partition(Partition.Type.Text, words))
-                        }
-                    }
-                }
-            }
-            return RichText(sequence)
-        }
-
-
-        /**
-         * Converts plain string from Na'vi v1 into Rich Text
-         */
-        fun create(text: String?): RichText? {
-            if (text.isNullOrEmpty()) {
-                return null
-            }
-
-            val sequence = mutableListOf<Partition>()
-
-            //Na'vi
-            @Suppress("RegExpRedundantEscape")
-            val naviSplitRegex = """((?<=\[.[^\[\]]{1,9999}\])|(?=\[.[^\[\]]*\]))"""
-                .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-
-            @Suppress("RegExpRedundantEscape")
-            val naviRegex = """\[.[^\[\]]*\]"""
-                .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-
-
-            // We first split the string based on URL, then based on Na'vi ref.
-            // Then we just check whether it's a URL/Na'vi block, and assign the types accordingly
-            val textPartitions = naviSplitRegex.split(text).toList()
-
-            for (partition in textPartitions)
-            {
-                //Na'vi
-                if (naviRegex.matches(partition)) {
-                    // Remove the starting and ending brackets [ ]
-                    val refNavi = partition.removePrefix("[").removeSuffix("]")
-                        .split(':', ignoreCase = true)[0] // Removes the type at the end
-                    // Example: [skxawng:n] -> skxawng
-
-                    sequence.add(Partition(Partition.Type.Navi, navi = refNavi))
-                    continue
-                }
-
-
-                /*
-                * TODO: For some reason text won't wrap with the Na'vi chips. For now
-                *  I'm going to force the text to wrap by splitting every word :/
-                */
-                // TEXT or URL
-                for (words in spaceRegex.split(partition)) {
-
-                    when {
-
-                        //URL
-                        Patterns.WEB_URL.matcher(words).matches() -> {
-                            sequence.add(
-                                Partition(
-                                    Partition.Type.Url,
-                                    urlDisplay = AnnotatedString(text = words),
-                                    url = words
-                                )
-                            )
-                        }
-
-                        words == "\n" ->
-                            sequence.add(Partition(Partition.Type.Text, words))
-
-                        //Space
-                        words.isBlank() ->
-                            sequence.add(Partition(Partition.Type.Space, words))
-
-                        //Text
-                        else ->
-                            sequence.add(Partition(Partition.Type.Text, words))
-                    }
-
-                }
-
-            }
-
-            return RichText(sequence)
-        }
-    }
-}
-
 data class Source(
     val type: Type,
     val richUrl: RichText? = null,
@@ -334,12 +181,15 @@ data class Source(
     }
 }
 
+
 data class Navi(
     val word: String,
     val type: String,
 
     val translations: List<Map<Language, String>>,
     val pronunciation: List<Pronunciation>?,
+
+    val conjugatedExplanation: List<ConjugatedExplaination>?,
 
     val infixes: String?,
 
@@ -365,3 +215,4 @@ data class Navi(
     }
 
 }
+

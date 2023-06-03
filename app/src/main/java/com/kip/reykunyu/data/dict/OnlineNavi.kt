@@ -2,34 +2,6 @@ package com.kip.reykunyu.data.dict
 
 import com.kip.reykunyu.data.dict.*
 import kotlinx.serialization.*
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonDecoder
-
-@Serializable(with = RichTextComponentRawSerializer::class)
-//Rich text component: Either plain text, or a Na'vi ref chip
-data class RichTextPartitionRaw(
-    val text: String? = null,
-
-    // A special Na'vi structure that only has basic ref info,
-    val naviRef: OnlineNaviRaw? = null
-)
-
-@OptIn(ExperimentalSerializationApi::class)
-@Serializer(forClass = RichTextPartitionRaw::class)
-object RichTextComponentRawSerializer : KSerializer<RichTextPartitionRaw> {
-    override fun deserialize(decoder: Decoder): RichTextPartitionRaw {
-        val json = (decoder as JsonDecoder).decodeJsonElement()
-
-        //Either it's a text(URL) element, or a Na'vi ref element
-        return try {
-            RichTextPartitionRaw(text = Json.decodeFromString<String>(json.toString()))
-        } catch (e: Exception) {
-            RichTextPartitionRaw(naviRef = Json.decodeFromString<OnlineNaviRaw>(json.toString()))
-        }
-
-    }
-}
 
 
 @Serializable
@@ -41,6 +13,8 @@ data class OnlineNaviRaw(
 
     val translations: List<Map<String, String>>,
     val short_translation: String? = null,
+
+    val conjugated: List<ConjugatedElementRaw>? = null,
 
     val pronunciation: List<Pronunciation>? = null,
 
@@ -106,6 +80,8 @@ data class OnlineNaviRaw(
             status = status,
             status_note = RichText.create(status_note),
             source = Source.createList(source),
+            conjugatedExplanation = if(conjugated != null) { ConjugatedElementRaw.createExplainations(conjugated) } else { null }
         )
     }
 }
+
