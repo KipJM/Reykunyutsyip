@@ -1,5 +1,3 @@
-# NOTE: Due to school and other stuff I can't update this project for a while. the project is not dead! I'll get back on it in maybe a month. Sorry!  
-
 ![Reykunyutsyìp Logo](https://raw.githubusercontent.com/KipJM/Reykunyutsyip/master/info/Reykunyutsyip_light.svg)
 # Reykunyutsyìp
 ### An **unofficial** Android client for the [Reykunyu Na'vi dictionary](https://reykunyu.lu)
