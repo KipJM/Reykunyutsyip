@@ -1,6 +1,7 @@
-![Reykunyutsyìp Logo](https://raw.githubusercontent.com/KipJM/Reykunyutsyip/master/info/Reykunyutsyip_light.svg)
-# Reykunyutsyìp
-### An **unofficial** Android client for the [Reykunyu Na'vi dictionary](https://reykunyu.lu)
+![Reykunyutsyìp Banner](https://github.com/KipJM/Reykunyutsyip/blob/master/info/combinedBanner.png)
+
+
+# An **unofficial** Android client for the [Reykunyu Na'vi dictionary](https://reykunyu.lu)
 Reykunyu - someone who lets you discover things  
 Reykunyutsyìp - Little Reykunyu :)  
 ### Download here: https://github.com/kipjm/reykunyutsyip/releases/latest
