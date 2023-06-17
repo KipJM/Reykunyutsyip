@@ -4,7 +4,7 @@
 # An **unofficial** Android client for the [Reykunyu Na'vi dictionary](https://reykunyu.lu)
 Reykunyu - someone who lets you discover things  
 Reykunyutsyìp - Little Reykunyu :)  
-### Download here: https://github.com/kipjm/reykunyutsyip/releases/latest
+### [Download latest version here!](https://github.com/kipjm/reykunyutsyip/releases/latest)
 
 ## Info
 Reykunyutsyìp is an UNOFFICIAL Android client of Reykunyu. It is made by Kip, and is not affiliated with Reykunyu.
