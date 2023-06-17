@@ -15,6 +15,7 @@ data class OnlineNaviRaw(
     val short_translation: String? = null,
 
     val conjugated: List<ConjugatedElementRaw>? = null,
+    val affixes: List<AffixRaw>? = null,
 
     val pronunciation: List<Pronunciation>? = null,
 

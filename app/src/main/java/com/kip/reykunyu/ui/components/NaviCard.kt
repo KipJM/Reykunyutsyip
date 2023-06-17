@@ -197,7 +197,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
 
                     }
 
-                    AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
+                    //AutoSpacer(navi.translations, navi.meaning_note, 5.dp, divider = false)
 
                     // Conjugation explanation
                     if (navi.conjugatedExplanation != null) {
@@ -211,7 +211,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
 
                         val conjugationTextStyle = Typography.titleLarge.copy(fontSize = 24.sp)
 
-                        for (explanation in navi.conjugatedExplanation) {
+                        navi.conjugatedExplanation.forEachIndexed { index, explanation ->
                             FlowRow(
                                 modifier = Modifier.padding(horizontal = 20.dp),
                                 verticalArrangement = Arrangement.Center
@@ -345,6 +345,11 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                                         }
                                     }
                                 }
+                            }
+
+                            //Spacer
+                            if (index < navi.conjugatedExplanation.count() - 1) {
+                                Spacer(Modifier.padding(5.dp))
                             }
                         }
                     }
@@ -1001,7 +1006,7 @@ fun NaviCardPreview() {
                             content = "r"
                     )),
                     words = listOf("tsamesuteru", "tsamesuter"),
-                    type = "n"
+                        type = null
                     ),
                     ConjugatedExplanation(
                         formula=listOf(

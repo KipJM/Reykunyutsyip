@@ -4,6 +4,8 @@ import android.util.Log
 import kotlinx.serialization.Serializable
 import java.util.zip.DataFormatException
 
+///Conjugated explanation and affixes list
+
 @Serializable
 data class ConjugatedElementRaw(
     val type: String,
@@ -27,7 +29,7 @@ data class ConjugatedElementRaw(
 
             for (element in raw) {
 
-                val conjugation = element.conjugation;
+                val conjugation = element.conjugation
 
                 if(conjugation.result.count() == 1
                     && conjugation.result[0].lowercase() == conjugation.root.lowercase()
@@ -71,7 +73,7 @@ data class ConjugatedElementRaw(
                             "REYKUNYU", "Parsing Na'vi broke. ${element.type} " +
                                     "not expected in the possible conjugation types"
                         )
-                        throw DataFormatException();
+                        throw DataFormatException()
                     }
                 }
 
@@ -122,7 +124,7 @@ data class ConjugatedElementRaw(
                 )
             }
 
-            return ConjugatedExplanation(partitions, conjugation.result, null);
+            return ConjugatedExplanation(partitions, conjugation.result, null)
         }
 
         private fun explainVerb(conjugation: Conjugation): ConjugatedExplanation {
@@ -152,7 +154,7 @@ data class ConjugatedElementRaw(
                 )
             }
 
-            return ConjugatedExplanation(partitions, conjugation.result, null);
+            return ConjugatedExplanation(partitions, conjugation.result, null)
         }
 
         private fun explainAdjective(conjugation: Conjugation): ConjugatedExplanation {
@@ -185,7 +187,7 @@ data class ConjugatedElementRaw(
                 )
             }
 
-            return ConjugatedExplanation(partitions, conjugation.result, null);
+            return ConjugatedExplanation(partitions, conjugation.result, null)
         }
 
         private fun explainVerbToNoun(conjugation: Conjugation): ConjugatedExplanation {
@@ -200,7 +202,7 @@ data class ConjugatedElementRaw(
                 ConjugatedExplanation.Partition.Type.Suffix, conjugation.affixes!![0])
             )
 
-            return ConjugatedExplanation(partitions, conjugation.result, "n");
+            return ConjugatedExplanation(partitions, conjugation.result, "n")
         }
 
         private fun explainVerbToAdjective(conjugation: Conjugation): ConjugatedExplanation {
@@ -216,7 +218,7 @@ data class ConjugatedElementRaw(
             )
 
 
-            return ConjugatedExplanation(partitions, conjugation.result, "adj");
+            return ConjugatedExplanation(partitions, conjugation.result, "adj")
         }
 
         private fun explainVerbToParticiple(conjugation: Conjugation): ConjugatedExplanation {
@@ -230,7 +232,7 @@ data class ConjugatedElementRaw(
                 (ConjugatedExplanation.Partition.Type.Infix, conjugation.affixes!![0])
             )
 
-            return ConjugatedExplanation(partitions, conjugation.result, "adj");
+            return ConjugatedExplanation(partitions, conjugation.result, "adj")
         }
 
         private fun explainAdjectiveToVerb(conjugation: Conjugation): ConjugatedExplanation {
@@ -244,7 +246,7 @@ data class ConjugatedElementRaw(
                 (ConjugatedExplanation.Partition.Type.Root, conjugation.root)
             )
 
-            return ConjugatedExplanation(partitions, conjugation.result, "adv");
+            return ConjugatedExplanation(partitions, conjugation.result, "adv")
         }
         //endregion
 
@@ -271,3 +273,17 @@ data class ConjugatedExplanation(
     }
 
 }
+
+
+@Serializable
+data class AffixRaw(
+    val type: String,
+    val combinedFrom: List<AffixRaw>? = null,
+    val affix: RichTextPartitionRaw // Can either be plain text(no ref) or Na'vi ref
+)
+
+
+
+//data class AffixListElement(
+//    val
+//)
