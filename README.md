@@ -1,8 +1,7 @@
-# NOTE: Due to school and other stuff I can't update this project for a while. the project is not dead! I'll get back on it in maybe a month. Sorry!  
+![Reykunyutsyìp Banner](https://github.com/KipJM/Reykunyutsyip/blob/master/info/combinedBanner.png)
 
-![Reykunyutsyìp Logo](https://raw.githubusercontent.com/KipJM/Reykunyutsyip/master/info/Reykunyutsyip_light.svg)
-# Reykunyutsyìp
-### An **unofficial** Android client for the [Reykunyu Na'vi dictionary](https://reykunyu.lu)
+
+# An **unofficial** Android client for the [Reykunyu Na'vi dictionary](https://reykunyu.lu)
 Reykunyu - someone who lets you discover things  
 Reykunyutsyìp - Little Reykunyu :)  
 ### Download here: https://github.com/kipjm/reykunyutsyip/releases/latest
