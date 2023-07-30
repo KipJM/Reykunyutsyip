@@ -190,10 +190,11 @@ data class Navi(
     val pronunciation: List<Pronunciation>?,
 
     val conjugatedExplanation: List<ConjugatedExplanation>?,
+    val affixes: List<AffixListElement>?,
 
     val infixes: String?,
 
-    val meaning_note: List<RichText>?,
+    val meaningNote: List<RichText>?,
     val etymology: RichText?,
 
     val seeAlso: List<String>?,
@@ -202,7 +203,7 @@ data class Navi(
     val image: String?,
 
     val status: String?,
-    val status_note: RichText?,
+    val statusNote: RichText?,
 
     val source: List<Source>?,
 ) {
@@ -212,6 +213,30 @@ data class Navi(
     }
     fun typeDetails(): Int {
         return typeInfoMap[type] ?: R.string.unknown
+    }
+
+    companion object {
+        fun lemmaForm(word: String, type: String?): String {
+            when (type) {
+                "n:si", "nv:si" -> {
+                    return if (word.endsWith(" si")) {
+                        word
+                    }else{
+                        "$word si"
+                    }
+                }
+                "aff:pre" -> {
+                    return "$word-"
+                }
+                "aff:in" -> {
+                    return "< $word >"
+                }
+                "aff:suf" -> {
+                    return "-$word"
+                }
+                else -> return word
+            }
+        }
     }
 
 }

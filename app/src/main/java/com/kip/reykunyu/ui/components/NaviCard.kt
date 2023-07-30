@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -53,8 +54,8 @@ import com.valentinilk.shimmer.*
 fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expanded: Boolean, toggleExpand: () -> Unit) {
 
     val expandable = !navi.seeAlso.isNullOrEmpty() || !navi.pronunciation.isNullOrEmpty() ||
-                navi.status_note != null || !navi.status.isNullOrEmpty() ||
-                !navi.meaning_note.isNullOrEmpty() || navi.etymology != null ||
+                navi.statusNote != null || !navi.status.isNullOrEmpty() ||
+                !navi.meaningNote.isNullOrEmpty() || navi.etymology != null ||
                 !navi.image.isNullOrEmpty() || !navi.infixes.isNullOrEmpty() ||
                 !navi.source.isNullOrEmpty()
 
@@ -77,7 +78,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                 //Na'vi
                 val textStyleNavi = Typography.titleLarge
                 Text(
-                    text = navi.word,
+                    text = Navi.lemmaForm(navi.word, navi.type),
                     style = textStyleNavi,
                     /*modifier = Modifier
                         .widthIn(min = 0.dp, max = 220.dp)*/
@@ -95,7 +96,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                         modifier = Modifier
                             .padding(horizontal = 8.dp)
                     ){
-                        AnimatedContent(targetState = showTypeInfo) { show ->
+                        AnimatedContent(targetState = showTypeInfo, label = "word type") { show ->
                             if (show) {
                                 Text(
                                     text = stringResource(id = navi.typeDetails()),
@@ -173,26 +174,25 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
             var i = 1
             for (translation in navi.translations) {
                 //Displays the proper language
-                if (translation[language] != null) {
-                    if (i != 1)
-                        Spacer(modifier = Modifier.padding(2.dp))
-                    Text(
-                        text = translation[language]!!,
-                        style = Typography.titleMedium,
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                    )
-                    i++
-                }
+                if (i != 1)
+                    Spacer(modifier = Modifier.padding(2.dp))
+
+                Text(
+                    text = translation[language] ?: translation[Language.English]!!,
+                    style = Typography.titleMedium,
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp)
+                )
+                i++
             }
 
             AnimatedVisibility(visible = expanded) {
                 Column {
                     //meaning note
-                    if (navi.meaning_note != null) {
+                    if (navi.meaningNote != null) {
 
-                        for (note in navi.meaning_note){
-                            RichTextComponent(richText = note, naviClick = naviClick)
+                        for (note in navi.meaningNote){
+                            RichTextComponent(richText = note, naviClick = naviClick, language = language)
                         }
 
                     }
@@ -223,52 +223,39 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                                 }*/
 
                                 explanation.formula.forEachIndexed{ index, partition ->
-                                    when (partition.type) {
-                                        ConjugatedExplanation.Partition.Type.Prefix -> {
-                                            PlainTooltipBox(tooltip = { Text("Prefix") }) {
-                                                Text(
-                                                    text = partition.content,
-                                                    style = conjugationTextStyle,
-                                                    color = MaterialTheme.colorScheme.secondary,
-                                                    modifier = Modifier.tooltipTrigger()
-                                                )
-                                            }
-                                        }
-                                        ConjugatedExplanation.Partition.Type.Root -> {
-                                            Text(
-                                                text = partition.content,
-                                                style = conjugationTextStyle
-                                            )
-                                        }
-                                        ConjugatedExplanation.Partition.Type.Suffix -> {
-                                            PlainTooltipBox(tooltip = {Text("Suffix")}) {
-                                                Text(
-                                                    text = partition.content,
-                                                    style = conjugationTextStyle,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.tooltipTrigger()
-                                                )
-                                            }
-                                        }
-                                        ConjugatedExplanation.Partition.Type.Infix -> {
-                                            PlainTooltipBox(tooltip = {Text("Infix")}) {
-                                                Text(
-                                                    text = partition.content,
-                                                    style = conjugationTextStyle,
-                                                    color = MaterialTheme.colorScheme.tertiary,
-                                                    modifier = Modifier.tooltipTrigger()
-                                                )
-                                            }
-                                        }
-                                        ConjugatedExplanation.Partition.Type.Correction -> {
+
+
+                                    val tooltip = when (partition.type) {
+                                        ConjugatedExplanation.Partition.Type.Prefix -> "Prefix"
+                                        ConjugatedExplanation.Partition.Type.Root -> ""
+                                        ConjugatedExplanation.Partition.Type.Suffix -> "Suffix"
+                                        ConjugatedExplanation.Partition.Type.Infix -> "Infix"
+                                        ConjugatedExplanation.Partition.Type.Correction -> ""
+                                    }
+
+                                    if (partition.type == ConjugatedExplanation.Partition.Type.Root
+                                        ||
+                                        partition.type == ConjugatedExplanation.Partition.Type.Correction
+                                        )
+                                    {
+                                        Text(
+                                            text = partition.content,
+                                            style = conjugationTextStyle,
+                                            color = getAffixColor(type = partition.type)
+                                        )
+
+                                    } else {
+                                        PlainTooltipBox(tooltip = { Text(tooltip) }) {
                                             Text(
                                                 text = partition.content,
                                                 style = conjugationTextStyle,
-                                                color = MaterialTheme.colorScheme.error,
-                                                textDecoration = TextDecoration.LineThrough
+                                                color = getAffixColor(type = partition.type),
+                                                modifier = Modifier.tooltipTrigger()
                                             )
                                         }
                                     }
+
+
 
                                     if (partition.type == ConjugatedExplanation.Partition.Type.Correction) {
                                         Text(
@@ -325,7 +312,9 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                                             modifier = Modifier
                                                 .padding(horizontal = 8.dp)
                                         ){
-                                            AnimatedContent(targetState = showTypeInfo) { show ->
+                                            AnimatedContent(targetState = showTypeInfo,
+                                                label = "type display"
+                                            ) { show ->
                                                 if (show) {
                                                     Text(
                                                         text = stringResource(id = typeInfoMap[explanation.type] ?: R.string.unknown),
@@ -358,6 +347,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                     RichInfoModule(
                         category = "ETYMOLOGY",
                         richText = navi.etymology,
+                        language = language,
                         naviClick = naviClick
                     )
 
@@ -376,7 +366,8 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                             for (refNavi in navi.seeAlso) {
                                 NaviReferenceChip(
                                     refNavi = refNavi, onClick = naviClick,
-                                    paddingR = 10.dp
+                                    paddingR = 10.dp,
+                                    type = ""
                                 )
                             }
                         }
@@ -397,7 +388,8 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                             for (refNavi in navi.derived) {
                                 NaviReferenceChip(
                                     refNavi = refNavi, onClick = naviClick,
-                                    paddingR = 10.dp
+                                    paddingR = 10.dp,
+                                    type = ""
                                 )
                             }
                         }
@@ -434,12 +426,14 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                         category = "STATUS", content = navi.status?.uppercase(),
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Black
-                        )
+                        ),
+                        language = language
                     )
 
                     //statusNote
                     RichInfoModule(
-                        category = "NOTE", richText = navi.status_note, padding = 3.dp,
+                        category = "NOTE", richText = navi.statusNote, padding = 3.dp,
+                        language = language,
                         naviClick = naviClick
                     )
 
@@ -466,7 +460,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                         }
                 ) {
 
-                    AnimatedContent(targetState = expanded) { expandState ->
+                    AnimatedContent(targetState = expanded, label = "EXPAND/HIDE") { expandState ->
                         Text(
                             text = if(!expandState) "VIEW MORE" else "VIEW LESS",
                             style = labelLarge,
@@ -474,7 +468,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                         )
                     }
 
-                    AnimatedContent(targetState = expanded) { expandState ->
+                    AnimatedContent(targetState = expanded, label = "EXPAND/HIDE") { expandState ->
                         Icon(
                             imageVector = if (!expandState)
                                 Icons.Filled.KeyboardArrowUp
@@ -596,6 +590,7 @@ fun RichInfoModule(
     richText: RichText?,
     style: TextStyle = Typography.bodyLarge,
     padding: Dp = 8.dp,
+    language: Language,
     naviClick: (String) -> Unit
 ) {
     if (richText == null) {
@@ -613,7 +608,8 @@ fun RichInfoModule(
     RichTextComponent(
         richText = richText,
         style = style,
-        naviClick = naviClick
+        naviClick = naviClick,
+        language = language
     )
 }
 
@@ -622,6 +618,7 @@ fun TextModule(
     category: String,
     content: String?,
     style: TextStyle = Typography.bodyLarge,
+    language: Language,
     padding: Dp = 8.dp,
 ) {
     if (content == null) {
@@ -641,6 +638,7 @@ fun TextModule(
             RichText.Partition(RichText.Partition.Type.Text, text = content)
         )),
         style = style,
+        language = language,
         naviClick = {}
     )
 }
@@ -725,12 +723,34 @@ fun stylePronunciationText(text: String, stressed: Int?): AnnotatedString {
 }
 
 //region Rich Text
+
+@Composable
+fun lintSpecialText(type: String? = ""): Color {
+    if (type.isNullOrEmpty()) {
+        return Color.Unspecified
+    }
+
+    return getAffixColor(type = ConjugatedExplanation.getAffixType(type))
+}
+
+@Composable
+fun getAffixColor(type: ConjugatedExplanation.Partition.Type): Color {
+    return when(type) {
+        ConjugatedExplanation.Partition.Type.Prefix -> MaterialTheme.colorScheme.secondary
+        ConjugatedExplanation.Partition.Type.Root -> Color.Unspecified
+        ConjugatedExplanation.Partition.Type.Suffix -> MaterialTheme.colorScheme.primary
+        ConjugatedExplanation.Partition.Type.Infix -> MaterialTheme.colorScheme.tertiary
+        ConjugatedExplanation.Partition.Type.Correction -> MaterialTheme.colorScheme.error
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RichTextComponent(
     richText: RichText?,
     style: TextStyle = Typography.bodyLarge,
     padding: Boolean = true,
+    language: Language,
     naviClick: (String) -> Unit
 ) {
     if(richText == null) {
@@ -749,15 +769,23 @@ fun RichTextComponent(
         for (component in richText.sequence) {
             when (component.type) {
 
-                RichText.Partition.Type.Text ->
+                RichText.Partition.Type.Text, RichText.Partition.Type.LocalizedText ->
                 {
+                    val text: String = if(component.type == RichText.Partition.Type.Text)
+                        component.text!!
+                    else
+                        component.localizedText!![language.toString()]
+                            ?: component.localizedText[Language.English.toString()]!!
+
+
                     //Hacky way of supporting line breaks
                     if (component.text!! == "\n"){
                         Spacer(Modifier.padding(horizontal = 100000.dp, vertical=2.dp))
                     }else {
                         Text(
-                            text = component.text,
-                            style = style
+                            text = text,
+                            style = style,
+                            color = lintSpecialText(component.naviType)
                         )
                     }
                 }
@@ -768,7 +796,7 @@ fun RichTextComponent(
                         text = component.urlDisplay!!,
                         style = style.copy(
                             textDecoration = TextDecoration.Underline,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = if (lintSpecialText(component.naviType) == Color.Unspecified) MaterialTheme.colorScheme.onPrimaryContainer else lintSpecialText(component.naviType)
                         ),
                         onClick = {
                             val builder = CustomTabsIntent.Builder()
@@ -794,7 +822,8 @@ fun RichTextComponent(
                         refNavi = component.navi!!,
                         paddingL = 1.dp,
                         paddingR = 1.dp,
-                        onClick = naviClick
+                        onClick = naviClick,
+                        type = component.naviType
                     )
                 }
 
@@ -811,8 +840,9 @@ fun RichTextComponent(
 @Composable
 fun NaviReferenceChip(
     refNavi: String,
+    type: String?,
     paddingL: Dp = 0.dp, paddingR: Dp = 0.dp,
-    onClick: (String) -> Unit
+    onClick: (String) -> Unit,
 ) {
     Spacer(modifier = Modifier
         .padding(horizontal = paddingL)
@@ -824,8 +854,9 @@ fun NaviReferenceChip(
                   },
         label = {
             Text(
-                text = refNavi,
+                text = Navi.lemmaForm(refNavi, type),
                 style = Typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                color = lintSpecialText(type)
             )
         },
         modifier = Modifier
@@ -912,6 +943,7 @@ fun SourcesCard(
                                                 RichTextComponent(
                                                     naviClick = { /* UNUSED */ },
                                                     richText = source.richUrl,
+                                                    language = Language.English, // UNUSED?
                                                     padding = false
                                                 )
                                             }
@@ -923,6 +955,7 @@ fun SourcesCard(
                                                         RichTextComponent(
                                                             richText = entry,
                                                             naviClick = naviClick,
+                                                            language = Language.English, //UNUSED?
                                                             padding = false
                                                         )
                                                     }

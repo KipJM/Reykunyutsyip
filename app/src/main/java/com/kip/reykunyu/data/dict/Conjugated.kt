@@ -272,6 +272,27 @@ data class ConjugatedExplanation(
         }
     }
 
+    companion object {
+        fun getAffixType(type: String): Partition.Type {
+            when (type) {
+                "aff:pre" -> {
+                    return Partition.Type.Prefix
+                }
+
+                "aff:in" -> {
+                    return Partition.Type.Infix
+                }
+
+                "aff:suf" -> {
+                    return Partition.Type.Suffix
+                }
+
+                else -> {
+                    return Partition.Type.Root //generic
+                }
+            }
+        }
+    }
 }
 
 
@@ -280,10 +301,93 @@ data class AffixRaw(
     val type: String,
     val combinedFrom: List<AffixRaw>? = null,
     val affix: RichTextPartitionRaw // Can either be plain text(no ref) or Na'vi ref
+){
+    companion object {
+        fun createTable(affixes: List<AffixRaw>): List<AffixListElement> {
+            val list = mutableListOf<AffixListElement>()
+            for (affix in affixes) {
+                if (!affix.combinedFrom.isNullOrEmpty()) {
+                    //Since it's combined, there won't be a ref
+                    val display = affix.affix.text!!
+                    val type = "aff:in"
+
+                    val components = mutableListOf<RichText.Partition>()
+                    val meaning = mutableListOf<RichText.Partition>()
+
+
+                    var first = true
+                    for (part in affix.combinedFrom) {
+
+                        if (first) {
+
+                            components += RichText.Partition(
+                                type = RichText.Partition.Type.Text,
+                                text = "= "
+                            )
+                            first = false
+
+                        } else {
+
+                            components += RichText.Partition(
+                                type = RichText.Partition.Type.Text,
+                                text = " + "
+                            )
+
+                            meaning += RichText.Partition(
+                                type = RichText.Partition.Type.Text,
+                                text = " + "
+                            )
+                        }
+
+
+                        val compPart = RichText.Partition.create(part.affix)
+                        if (compPart != null) {
+                            components.add(compPart)
+                        }
+
+                        meaning += RichText.Partition(
+                            type = RichText.Partition.Type.LocalizedText,
+                            localizedText = part.affix.naviRef!!.translations[0]
+                        )
+                    }
+
+
+                    list += AffixListElement(
+                        affix = display,
+                        ref = false,
+                        type = type,
+                        components = RichText(components),
+                        meaning = RichText(meaning)
+                    )
+
+                } else {
+
+                    val display = affix.affix.naviRef!!.navi
+                    val type = affix.affix.naviRef.wordType
+
+                    list += AffixListElement(
+                        affix = display,
+                        ref = true,
+                        type = type,
+                        meaning = RichText(listOf(RichText.Partition(
+                            type = RichText.Partition.Type.LocalizedText,
+                            localizedText = affix.affix.naviRef.translations[0]
+                        )))
+                    )
+                }
+            }
+
+            return list
+        }
+    }
+}
+
+
+
+data class AffixListElement(
+    val affix: String,
+    val ref: Boolean,
+    val type: String,
+    val components: RichText? = null,
+    val meaning: RichText
 )
-
-
-
-//data class AffixListElement(
-//    val
-//)

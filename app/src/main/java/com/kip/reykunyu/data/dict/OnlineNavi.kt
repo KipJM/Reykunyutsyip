@@ -12,7 +12,7 @@ data class OnlineNaviRaw(
     val wordType: String,
 
     val translations: List<Map<String, String>>,
-    val short_translation: String? = null,
+    val shortTranslation: String? = null,
 
     val conjugated: List<ConjugatedElementRaw>? = null,
     val affixes: List<AffixRaw>? = null,
@@ -21,7 +21,7 @@ data class OnlineNaviRaw(
 
     val infixes: String? = null,
 
-    val meaning_note: List<RichTextPartitionRaw>? = null,
+    val meaningNote: List<RichTextPartitionRaw>? = null,
     val etymology: List<RichTextPartitionRaw>? = null,
 
     val seeAlso: List<OnlineNaviRaw>? = null,
@@ -30,18 +30,15 @@ data class OnlineNaviRaw(
     val image: String? = null,
 
     val status: String? = null,
-    val status_note: String? = null,
+    val statusNote: String? = null,
 
     val source: List<List<String>>? = null,
     //TODO: affixes, conjugated, conjugations, sentences
 
 ) {
     fun toNavi(): Navi {
-        //intransitive verbs don't have si appended for some reason, manually append them here
-        var word = navi
-        if (wordType == "n:si") {
-            word += " si"
-        }
+        //modification is now done universely at UI layer
+        val word = navi
 
         //Translations
         val outputTranslation = mutableListOf<Map<Language, String>>()
@@ -60,7 +57,7 @@ data class OnlineNaviRaw(
         }
 
 
-        val convertedMeaningNote = RichText.create(meaning_note)
+        val convertedMeaningNote = RichText.create(meaningNote)
         val meaningNoteList =
             if(convertedMeaningNote != null)
             { listOf(convertedMeaningNote)
@@ -73,15 +70,16 @@ data class OnlineNaviRaw(
             translations = outputTranslation.toList(),
             pronunciation = pronunciation,
             infixes = infixes,
-            meaning_note = meaningNoteList,
+            meaningNote = meaningNoteList,
             etymology = RichText.create(etymology),
             seeAlso = seeAlso?.map { o -> o.navi },
             derived = derived?.map { o -> o.navi },
             image = image,
             status = status,
-            status_note = RichText.create(status_note),
+            statusNote = RichText.create(statusNote),
             source = Source.createList(source),
-            conjugatedExplanation = if(conjugated != null) { ConjugatedElementRaw.createExplanations(conjugated) } else { null }
+            conjugatedExplanation = if(conjugated != null) ConjugatedElementRaw.createExplanations(conjugated) else null,
+            affixes = if(affixes != null) AffixRaw.createTable(affixes) else null
         )
     }
 }

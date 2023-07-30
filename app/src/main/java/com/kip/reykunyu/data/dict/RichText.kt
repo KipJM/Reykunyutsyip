@@ -45,17 +45,67 @@ data class RichText(
         val text: String? = null,
         val navi: String? = null,
         val urlDisplay: AnnotatedString? = null,
-        val url: String? = null
+        val url: String? = null,
+        val localizedText: Map<String, String>? = null,
+        val naviType: String? = null //Na'vi type for special linting
     ) {
         enum class Type {
             Text,
             Url,
             Navi,
-            Space
+            Space,
+            LocalizedText
+        }
+
+        companion object {
+
+
+            fun create(partition: RichTextPartitionRaw): Partition? {
+
+                //Na'vi
+                if (partition.naviRef != null) {
+                    return Partition(
+                        Type.Navi,
+                        navi = partition.naviRef.navi,
+                        naviType = partition.naviRef.wordType
+                    )
+                }
+
+                /*
+                * TODO: For some reason text won't wrap with the Na'vi chips. For now
+                *  I'm going to force the text to wrap by splitting every word :/
+                */
+                // TEXT or URL
+                if (partition.text != null) {
+                    for (words in spaceRegex.split(partition.text)) {
+                        when {
+                            //URL
+                            Patterns.WEB_URL.matcher(words).matches() -> {
+                                return Partition(
+                                    Type.Url,
+                                    urlDisplay = AnnotatedString(text = words),
+                                    url = words
+                                )
+
+                            }
+
+                            //Space
+                            words.isBlank() ->
+                                return Partition(Type.Space, words)
+
+                            //Text
+                            else ->
+                                return Partition(Type.Text, words)
+                        }
+                    }
+                }
+
+                return null
+            }
         }
     }
 
-    companion object{
+    companion object {
 
         @Suppress("RegExpRedundantEscape")
         val spaceRegex = """((?<=[ \n\(])|(?=[ \n\)]))"""
@@ -70,41 +120,9 @@ data class RichText(
             val sequence = mutableListOf<Partition>()
 
             for (partition in raw) {
-                //Na'vi
-                if (partition.naviRef != null) {
-                    sequence.add(Partition(Partition.Type.Navi,
-                        navi = partition.naviRef.navi))
-                    continue
-                }
-
-                /*
-                * TODO: For some reason text won't wrap with the Na'vi chips. For now
-                *  I'm going to force the text to wrap by splitting every word :/
-                */
-                // TEXT or URL
-                if (partition.text != null) {
-                    for (words in spaceRegex.split(partition.text)) {
-                        when {
-                            //URL
-                            Patterns.WEB_URL.matcher(words).matches() -> {
-                                sequence.add(
-                                    Partition(
-                                        Partition.Type.Url,
-                                        urlDisplay = AnnotatedString(text = words),
-                                        url = words
-                                    )
-                                )
-                            }
-
-                            //Space
-                            words.isBlank() ->
-                                sequence.add(Partition(Partition.Type.Space, words))
-
-                            //Text
-                            else ->
-                                sequence.add(Partition(Partition.Type.Text, words))
-                        }
-                    }
+                val compPart = Partition.create(partition)
+                if (compPart != null) {
+                    sequence.add(compPart)
                 }
             }
             return RichText(sequence)

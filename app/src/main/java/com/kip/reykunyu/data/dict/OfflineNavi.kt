@@ -117,7 +117,7 @@ data class DictNavi(
             translations = translations,
             pronunciation = pronunciation,
             infixes = infixes,
-            meaning_note = meaningNoteList?.mapNotNull { o -> RichText.create(o) },
+            meaningNote = meaningNoteList?.mapNotNull { o -> RichText.create(o) },
             etymology = RichText.create(etymology),
             seeAlso = seeAlso?.map
             {
@@ -128,9 +128,10 @@ data class DictNavi(
             derived = null, //Only available for online
             image = image,
             status = status,
-            status_note = RichText.create(status_note),
+            statusNote = RichText.create(status_note),
             source = Source.createList(source),
-            conjugatedExplanation = null //Only available for online
+            conjugatedExplanation = null, //Only available for online
+            affixes = null //Only available for online
         )
     }
 }

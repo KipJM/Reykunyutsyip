@@ -125,7 +125,7 @@ fun RichTextPanel(title: String, richText: RichText) {
     Card {
         Column(Modifier.padding(horizontal = 10.dp)) {
             Text(text = title, style = MaterialTheme.typography.titleMedium)
-            RichTextComponent(richText = richText, naviClick = {})
+            RichTextComponent(richText = richText, language = Language.English, naviClick = {})
             Spacer(modifier = Modifier.padding(vertical = 10.dp))
         }
     }
