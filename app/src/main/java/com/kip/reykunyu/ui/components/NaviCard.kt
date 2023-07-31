@@ -12,6 +12,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
@@ -33,7 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,6 +43,7 @@ import com.kip.reykunyu.R
 import com.kip.reykunyu.data.api.AudioImageRepository
 import com.kip.reykunyu.data.dict.*
 import com.kip.reykunyu.data.offline.DictNavi
+import com.kip.reykunyu.data.online.OnlineTranslateSearch
 import com.kip.reykunyu.ui.theme.Typography
 import com.valentinilk.shimmer.*
 
@@ -343,6 +344,9 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                         }
                     }
 
+                    //Affixes
+                    AffixTable(affixes = navi.affixes, show = expanded, language = language, naviClick = naviClick)
+
                     //etymology
                     RichInfoModule(
                         category = "ETYMOLOGY",
@@ -471,15 +475,14 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                     AnimatedContent(targetState = expanded, label = "EXPAND/HIDE") { expandState ->
                         Icon(
                             imageVector = if (!expandState)
-                                Icons.Filled.KeyboardArrowUp
-                            else Icons.Filled.KeyboardArrowDown,
+                                Icons.Filled.KeyboardArrowDown
+                            else Icons.Filled.KeyboardArrowUp,
                             contentDescription = null,
 //                        tint = MaterialTheme.colorScheme.tertiary
                         )
                     }
                 }
             }
-
 
             Spacer(Modifier.padding(6.dp))
         }
@@ -779,7 +782,7 @@ fun RichTextComponent(
 
 
                     //Hacky way of supporting line breaks
-                    if (component.text!! == "\n"){
+                    if (text == "\n"){
                         Spacer(Modifier.padding(horizontal = 100000.dp, vertical=2.dp))
                     }else {
                         Text(
@@ -868,9 +871,162 @@ fun NaviReferenceChip(
 }
 
 
-
-
 //endregion
+
+@Composable
+fun AffixTable(
+    affixes: List<AffixListElement>?,
+    style: TextStyle = Typography.bodyLarge,
+    language: Language,
+    show: Boolean,
+    naviClick: (String) -> Unit
+) {
+    if (affixes.isNullOrEmpty()) {
+        return
+    }
+    
+    //Collapsable card
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(Modifier.animateContentSize()) {
+        if (show) {
+            Spacer(Modifier.padding(6.dp))
+            Card(
+                onClick = { expanded = !expanded },
+                modifier = Modifier
+                    .animateContentSize()
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(start = 20.dp)
+                ) {
+                    //Title
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 10.dp)
+                    ) {
+                        Text(
+                            text = "AFFIXES",
+                            style = MaterialTheme.typography.labelLarge.copy(fontSize = 18.sp),
+                        )
+                        Spacer(Modifier.weight(1f))
+                        IconButton(onClick = { expanded = !expanded }) {
+                            if (expanded) {
+                                Icon(Icons.Filled.KeyboardArrowDown, "fold affixes")
+                            } else {
+                                Icon(Icons.Filled.KeyboardArrowUp, "expand affixes")
+                            }
+                        }
+                    }
+
+                    AnimatedVisibility(visible = expanded) {
+                        Column(Modifier.padding(end = 10.dp)) {
+
+                            for (affix in affixes) {
+
+                                LazyRow(Modifier.padding(bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    item {
+
+                                        //Affix+type
+                                        if (affix.ref) {
+                                            NaviReferenceChip(
+                                                refNavi = affix.affix,
+                                                type = affix.type,
+                                                onClick = naviClick
+                                            )
+                                        } else {
+                                            Text(
+                                                text = Navi.lemmaForm(affix.affix, affix.type),
+                                                style = style,
+                                                color = lintSpecialText(affix.type)
+                                            )
+                                        }
+
+                                        //Type
+                                        Spacer(modifier = Modifier.padding(2.dp))
+
+                                        var showTypeInfo by remember { mutableStateOf(false) }
+
+                                        Card(
+                                            onClick = { showTypeInfo = !showTypeInfo },
+                                            colors = CardDefaults.elevatedCardColors()
+                                        )
+                                        {
+                                            Row(modifier = Modifier.padding(horizontal = 4.dp)) {
+                                                AnimatedContent(
+                                                    targetState = showTypeInfo,
+                                                    label = "word type"
+                                                )
+                                                { showDetails ->
+
+                                                    if (showDetails) {
+                                                        Text(
+                                                            text = stringResource(
+                                                                id = Navi.typeDetails(
+                                                                    affix.type
+                                                                )
+                                                            ),
+                                                            maxLines = 2,
+                                                            overflow = TextOverflow.Ellipsis,
+                                                            style = MaterialTheme.typography.displaySmall
+                                                                .copy(fontSize = 15.sp),
+                                                            color = lintSpecialText(affix.type)
+                                                        )
+                                                    } else {
+                                                        Text(
+                                                            text = Navi.typeDisplay(affix.type),
+                                                            style = MaterialTheme.typography.displaySmall
+                                                                .copy(fontSize = 15.sp),
+                                                            color = lintSpecialText(affix.type)
+                                                        )
+                                                    }
+
+                                                }
+                                            }
+                                        }
+
+
+
+
+                                    }
+
+                                    item {
+                                        Spacer(modifier = Modifier.padding(horizontal = 10.dp))
+
+                                        //Components
+                                        if(affix.components != null) {
+                                            RichTextComponent(richText = affix.components, language = language, naviClick = naviClick)
+                                        }
+                                    }
+
+                                    item {
+
+                                        Spacer(modifier = Modifier.padding(horizontal = 5.dp))
+
+                                        //meaning
+                                        RichTextComponent(
+                                            richText = affix.meaning,
+                                            language = language,
+                                            naviClick = naviClick
+                                        )
+
+                                    }
+                                }
+
+                                Divider(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(Modifier.padding(6.dp))
+
+                            }
+                        }
+                        Spacer(Modifier.padding(3.dp))
+                    }
+                }
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -978,9 +1134,7 @@ fun SourcesCard(
 
 
 
-@Preview(device = "id:pixel_6_pro",
-    wallpaper = Wallpapers.RED_DOMINATED_EXAMPLE
-)
+@Preview
 @Composable
 fun NaviCardPreview() {
     val naviList = listOf<DictNavi>(
@@ -1016,50 +1170,22 @@ fun NaviCardPreview() {
             image = "toruk.png",
         )
     )
+
+    val debugJson = "{\"fromNa'vi\":[{\"tìpawm\":\"tsamesuteru\",\"sì'eyng\":[{\"na'vi\":\"tute\",\"type\":\"n\",\"pronunciation\":[{\"syllables\":\"tu-te\",\"stressed\":1,\"audio\":[{\"speaker\":\"Plumps\",\"file\":\"plumps/tute:n.mp3\"},{\"speaker\":\"tsyili\",\"file\":\"tsyili/tute:n.mp3\"}],\"ipa\":{\"FN\":\"[ˈtu.tɛ]\",\"RN\":\"[ˈtu.tɛ]\"}}],\"translations\":[{\"en\":\"person\",\"de\":\"Person, Mensch (Na'vi)\",\"et\":\"isik\",\"fr\":\"personne\",\"hu\":\"személy\",\"nl\":\"persoon\",\"pl\":\"osoba\",\"ru\":\"персона (на'ви или человек)\",\"sv\":\"person\",\"xnavi\":\"’awa rusey a lu kanu nìftxan kuma po tsun fpivìl snoteri, nìpxi hapxì Na'viyä fu tawtute\"}],\"source\":[[\"http://en.wiktionary.org/wiki/Appendix:Na'vi\",\"\",\"\"]],\"conjugated\":[{\"type\":\"n\",\"conjugation\":{\"result\":[\"tsamesuteru\",\"tsamesuter\"],\"root\":\"tute\",\"affixes\":[\"tsa\",\"me\",\"\",\"\",\"\",\"r\",\"\"]}}],\"affixes\":[{\"type\":\"prefix\",\"affix\":{\"na'vi\":\"tsa\",\"type\":\"aff:pre\",\"translations\":[{\"en\":\"that\",\"de\":\"jener, jene, jenes\",\"nl\":\"die, dat\",\"fr\":\"ce/cet/cette ...-là\"}],\"source\":[[\"Horen Lì'fyayä LeNa'vi (§3.3.2)\",\"https://files.learnnavi.org/docs/horen-lenavi.pdf\"]]}},{\"type\":\"prefix\",\"affix\":{\"na'vi\":\"me\",\"type\":\"aff:pre\",\"translations\":[{\"en\":\"(dual)\",\"de\":\"(Dual, zwei von etwas)\",\"nl\":\"(tweevoud)\",\"fr\":\"(duel, deux de quelque chose)\"}],\"etymology\":\"Likely related to [mune:num].\",\"source\":[[\"Horen Lì'fyayä LeNa'vi (§3.1.4)\",\"https://files.learnnavi.org/docs/horen-lenavi.pdf\"]]}},{\"type\":\"suffix\",\"affix\":{\"na'vi\":\"r\",\"type\":\"aff:suf\",\"translations\":[{\"en\":\"(dative case: indirect object)\",\"fr\":\"(cas du datif, complément indirect)\",\"nl\":\"(datief, meewerkend voorwerp)\",\"de\":\"(Dativ-Fallendung, indirektes Objekt)\"}],\"source\":[[\"Horen Lì'fyayä LeNa'vi (§3.1.1)\",\"https://files.learnnavi.org/docs/horen-lenavi.pdf\",\"\"]]}}],\"conjugation\":{\"forms\":[[\"-tute-\",\"-tute-l\",\"-tute-t(i)\",\"-tute-r(u)\",\"-tute-yä\",\"-tute-ri\"],[\"me-{s}ute-\",\"me-{s}ute-l\",\"me-{s}ute-t(i)\",\"me-{s}ute-r(u)\",\"me-{s}ute-yä\",\"me-{s}ute-ri\"],[\"pxe-{s}ute-\",\"pxe-{s}ute-l\",\"pxe-{s}ute-t(i)\",\"pxe-{s}ute-r(u)\",\"pxe-{s}ute-yä\",\"pxe-{s}ute-ri\"],[\"(ay)-{s}ute-\",\"(ay)-{s}ute-l\",\"(ay)-{s}ute-t(i)\",\"(ay)-{s}ute-r(u)\",\"(ay)-{s}ute-yä\",\"(ay)-{s}ute-ri\"]]},\"derived\":[{\"na'vi\":\"aysupe\",\"type\":\"inter\",\"translations\":[{\"de\":\"Welche Personen?\",\"en\":\"what people\",\"fr\":\"quelles personnes?\",\"nl\":\"welke personen\"}]},{\"na'vi\":\"matu\",\"type\":\"intj\",\"translations\":[{\"en\":\"excuse me, hey\",\"nl\":\"sorry (om iemands aandacht te vragen)\",\"de\":\"Entschuldigung (um jemandes Aufmerksamkeit zu bekommen)\",\"fr\":\"pardonnez-moi, hé\"}]},{\"na'vi\":\"mesupe\",\"type\":\"inter\",\"translations\":[{\"de\":\"Welche beiden Personen?\",\"en\":\"what two people\",\"fr\":\"quelles deux personnes?\",\"nl\":\"welke twee personen\"}]},{\"na'vi\":\"paysu\",\"type\":\"inter\",\"translations\":[{\"de\":\"Welche Personen?\",\"en\":\"what people\",\"fr\":\"quelles personnes?\",\"nl\":\"welke personen\"}]},{\"na'vi\":\"pemsu\",\"type\":\"inter\",\"translations\":[{\"de\":\"Welche beiden Personen?\",\"en\":\"what two people\",\"fr\":\"quelles deux personnes?\",\"nl\":\"welke twee personen\"}]},{\"na'vi\":\"pepsu\",\"type\":\"inter\",\"translations\":[{\"de\":\"Welche drei Personen?\",\"en\":\"what three people\",\"fr\":\"quelles trois personnes?\",\"nl\":\"welke drie personen\"}]},{\"na'vi\":\"pesu\",\"type\":\"inter\",\"translations\":[{\"de\":\"Wer? (welcher Person?)\",\"en\":\"who\",\"et\":\"kes\",\"fr\":\"qui\",\"hu\":\"ki(csoda)?\",\"nl\":\"wie\",\"pl\":\"kto\",\"ru\":\"кто\",\"sv\":\"vem\"}]},{\"na'vi\":\"pxesupe\",\"type\":\"inter\",\"translations\":[{\"de\":\"Welche drei Personen?\",\"en\":\"what three people\",\"fr\":\"quelles trois personnes?\",\"nl\":\"welke drie personen\"}]},{\"na'vi\":\"syeptute\",\"type\":\"n\",\"translations\":[{\"de\":\"Hyneman (Cobralilien ähnlich), Menschenfalle, pandoratonia myopora\",\"en\":\"hyneman, person trapper\",\"et\":\"Lõkstaim (hyneman)\",\"fr\":\"[Pandoratonia myopora]\",\"hu\":\"hyneman, emberfogó (pandorai növényfaj)\",\"nl\":\"hyneman, mensen vanger\",\"pl\":\"łapiący w sidła\",\"ru\":\"hyneman, растениеловушка\",\"sv\":\"personfångare\"}]},{\"na'vi\":\"tawtute\",\"type\":\"n\",\"translations\":[{\"en\":\"Skyperson, human\",\"sv\":\"Himmelsperson, människa\",\"ru\":\"землянин, «небесная персона»\",\"pl\":\"Człowiek nieba, człowiek\",\"nl\":\"Luchtpersoon, mens\",\"hu\":\"ég ember (ember)\",\"fr\":\"Humain | Personne du ciel | Celui qui vient du ciel\",\"et\":\"Taevaisik, inimene\",\"de\":\"Himmelsperson, Mensch\"}]},{\"na'vi\":\"tupe\",\"type\":\"inter\",\"translations\":[{\"de\":\"Wer? (welche Person?)\",\"en\":\"who\",\"et\":\"kes\",\"fr\":\"qui?\",\"hu\":\"ki(csoda)?\",\"nl\":\"wie\",\"pl\":\"kto\",\"ru\":\"кто, который\",\"sv\":\"vem\"}]},{\"na'vi\":\"tutan\",\"type\":\"n\",\"translations\":[{\"de\":\"Mann, männliche Person\",\"en\":\"man, male (person)\",\"et\":\"mees\",\"fr\":\"mâle (personne) | homme | mec\",\"hu\":\"férfi\",\"nl\":\"man (persoon)\",\"pl\":\"mężczyzna\",\"ru\":\"мужчина\",\"sv\":\"manlig person\",\"x-navi\":\"tute afnelan\"}]},{\"na'vi\":\"tuté\",\"type\":\"n\",\"translations\":[{\"de\":\"Frau, weibliche Person\",\"en\":\"woman, female (person)\",\"et\":\"naine (isik)\",\"fr\":\"femme\",\"hu\":\"nő\",\"nl\":\"vrouw (persoon)\",\"pl\":\"kobieta\",\"ru\":\"женщина\",\"sv\":\"kvinna (person)\",\"x-navi\":\"tute afnele\"}]},{\"na'vi\":\"tuteo\",\"type\":\"pn\",\"translations\":[{\"de\":\"jemand, irgendjemand\",\"en\":\"somebody, someone\",\"et\":\"keegi\",\"fr\":\"quelqu'un\",\"hu\":\"valaki\",\"nl\":\"iemand\",\"pl\":\"ktoś\",\"ru\":\"ктото\",\"sv\":\"någon\"}]},{\"na'vi\":\"tutsena\",\"type\":\"n\",\"translations\":[{\"de\":\"Trage, Liege\",\"en\":\"stretcher\",\"et\":\"kanderaam (ese, millega filmis Grace'i lohistati)\",\"fr\":\"civière\",\"hu\":\"hordány\",\"nl\":\"brancard\",\"ru\":\"носилки\",\"x-navi\":\"sä’o a fko sar fte hivena tuteti\"}]}],\"sentences\":[{\"na'vi\":[[\"Fayupxaremì\",[\"'upxare:n\"]],[\"oe\",[\"oe:pn\"]],[\"payängkxo\",[\"pängkxo:v:in\"]],[\"teri\",[\"teri:adp\"]],[\"horen\",[\"koren:n\"]],[\"lì'fyayä\",[\"lì'fya:n\"]],[\"leNa'vi\",[\"leNa'vi:adj\"]],[\"fpi\",[\"fpi:adp:len\"]],[\"sute\",[\"tute:n\"]],[\"a\",[\"a:part\"]],[\"tsun\",[\"tsun:v:m\"]],[\"srekrr\",[\"srekrr:adv\"]],[\"tsat\",[\"tsa'u:pn\"]],[\"sivar.\",[\"sar:v:tr\"]]],\"translations\":{\"en\":{\"translation\":[\"In\",\"these\",\"messages,\",\"I\",\"will\",\"chat\",\"about\",\"the\",\"rules\",\"of\",\"the\",\"Na'vi\",\"language\",\"for\",\"people\",\"that\",\"can\",\"use\",\"it\",\"already.\"],\"mapping\":[[1,2,3],[4],[5,6],[7],[8,9],[10,11,13],[12],[14],[15],[16],[17],[20],[19],[18]]}},\"source\":[\"Na'viteri: “Zola’u nìprrte’! Welcome!”\",\"https://naviteri.org/2010/06/first-post/\",\"2010-06-24\"]}]}],\"aysämok\":[]}],\"toNa'vi\":[]}"
+
+    val converted = OnlineTranslateSearch().convertTranslationResult(debugJson).fromNavi[0].second[0]
+
     LazyColumn {
         items(items = naviList) { item ->
             var expanded by remember {
                 mutableStateOf(true)
             }
-            NaviCard(item.toNavi().copy(
-                conjugatedExplanation = listOf(
-                    ConjugatedExplanation(
-                    formula=listOf(
-                        ConjugatedExplanation.Partition(
-                        type = ConjugatedExplanation.Partition.Type.Prefix,
-                        content = "tsa"
-                    ), ConjugatedExplanation.Partition(
-                        type = ConjugatedExplanation.Partition.Type.Prefix,
-                        content = "me"
-                    ), ConjugatedExplanation.Partition(
-                        type = ConjugatedExplanation.Partition.Type.Root,
-                        content = "tute"
-                    ), ConjugatedExplanation.Partition(
-                            type = ConjugatedExplanation.Partition.Type.Suffix,
-                            content = "r"
-                    )),
-                    words = listOf("tsamesuteru", "tsamesuter"),
-                        type = null
-                    ),
-                    ConjugatedExplanation(
-                        formula=listOf(
-                        ConjugatedExplanation.Partition(
-                            type = ConjugatedExplanation.Partition.Type.Root,
-                            content = "tute"
-                        ), ConjugatedExplanation.Partition(
-                            type = ConjugatedExplanation.Partition.Type.Infix,
-                            content = "adas"
-                        ), ConjugatedExplanation.Partition(
-                                type = ConjugatedExplanation.Partition.Type.Correction,
-                                content = "hmmmmijioì"
-                            )),
-                    words = listOf("tuiiioiasda", "tfer"),
-                    type = "n"
-                )
-
-
-                ))
-                , Language.English, {}, expanded, {expanded = !expanded}
+            NaviCard(
+                item.toNavi().copy(
+                    conjugatedExplanation = converted.conjugatedExplanation,
+                    affixes = converted.affixes
+                ),
+                Language.English, {}, expanded, { expanded = !expanded }
             )
         }
     }

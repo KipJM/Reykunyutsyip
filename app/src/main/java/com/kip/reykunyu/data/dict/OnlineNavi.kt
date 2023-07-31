@@ -2,6 +2,44 @@ package com.kip.reykunyu.data.dict
 
 import com.kip.reykunyu.data.dict.*
 import kotlinx.serialization.*
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
+
+
+@Serializable(with = AdaptiveRichTextRawSerializer::class)
+data class AdaptiveRichTextRaw(
+    val text: String? = null,
+
+    val richText: List<RichTextPartitionRaw>? = null
+) {
+    fun convertToRichText(): RichText? {
+        if (text != null) {
+            return RichText.create(text)
+        }
+        if (richText != null) {
+            return RichText.create(richText)
+        }
+        //else
+        return null
+    }
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+@Serializer(forClass = AdaptiveRichTextRaw::class)
+object AdaptiveRichTextRawSerializer : KSerializer<AdaptiveRichTextRaw> {
+    override fun deserialize(decoder: Decoder): AdaptiveRichTextRaw {
+        val json = (decoder as JsonDecoder).decodeJsonElement()
+
+        //Either it's Rich text, or plain text
+        return try {
+            AdaptiveRichTextRaw(text = Json.decodeFromString<String>(json.toString()))
+        } catch (e: Exception) {
+            AdaptiveRichTextRaw(richText = Json.decodeFromString<List<RichTextPartitionRaw>>(json.toString()))
+        }
+
+    }
+}
 
 
 @Serializable
@@ -21,8 +59,8 @@ data class OnlineNaviRaw(
 
     val infixes: String? = null,
 
-    val meaningNote: List<RichTextPartitionRaw>? = null,
-    val etymology: List<RichTextPartitionRaw>? = null,
+    val meaningNote: AdaptiveRichTextRaw? = null,
+    val etymology: AdaptiveRichTextRaw? = null,
 
     val seeAlso: List<OnlineNaviRaw>? = null,
     val derived: List<OnlineNaviRaw>? = null,
@@ -57,7 +95,7 @@ data class OnlineNaviRaw(
         }
 
 
-        val convertedMeaningNote = RichText.create(meaningNote)
+        val convertedMeaningNote = meaningNote?.convertToRichText()
         val meaningNoteList =
             if(convertedMeaningNote != null)
             { listOf(convertedMeaningNote)
@@ -71,7 +109,7 @@ data class OnlineNaviRaw(
             pronunciation = pronunciation,
             infixes = infixes,
             meaningNote = meaningNoteList,
-            etymology = RichText.create(etymology),
+            etymology = etymology?.convertToRichText(),
             seeAlso = seeAlso?.map { o -> o.navi },
             derived = derived?.map { o -> o.navi },
             image = image,

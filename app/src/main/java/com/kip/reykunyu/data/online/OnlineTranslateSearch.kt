@@ -23,7 +23,7 @@ class OnlineTranslateSearch : TranslateSearchProvider{
     }
 
 
-    private fun convertTranslationResult(json: String): TranslateResult{
+    fun convertTranslationResult(json: String): TranslateResult{
         try{
             //Parse json to serialized data
             val resultsRaw = ReykunyuApi.jsonFormat.decodeFromString<OnlineTranslateResult>(json)

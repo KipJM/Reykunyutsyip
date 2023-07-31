@@ -237,6 +237,13 @@ data class Navi(
                 else -> return word
             }
         }
+
+        fun typeDisplay(type: String): String {
+            return typeMap[type] ?: "?"
+        }
+        fun typeDetails(type: String): Int {
+            return typeInfoMap[type] ?: R.string.unknown
+        }
     }
 
 }
