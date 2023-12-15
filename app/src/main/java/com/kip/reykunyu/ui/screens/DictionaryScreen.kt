@@ -232,7 +232,7 @@ private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel, enabled: 
                 selectAction = selectAction
             )
 
-            Divider()
+            HorizontalDivider()
 
             SearchTypeMenuItem(
                 type = SearchMode.Offline,
@@ -466,11 +466,12 @@ fun FromNaviList(
             }
         }
 
-        Divider(Modifier
-            .fillMaxWidth()
+        HorizontalDivider(
+            Modifier
+                .fillMaxWidth()
         )
 
-        HorizontalPager(state=state) {
+        HorizontalPager(state = state) {
             NaviList(naviList = fromNavi[it].second, language = language, naviAction = naviAction)
         }
 

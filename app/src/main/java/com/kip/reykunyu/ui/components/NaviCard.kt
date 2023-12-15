@@ -8,9 +8,23 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -19,8 +33,26 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +61,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.*
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -41,11 +75,20 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.kip.reykunyu.R
 import com.kip.reykunyu.data.api.AudioImageRepository
-import com.kip.reykunyu.data.dict.*
+import com.kip.reykunyu.data.dict.AffixListElement
+import com.kip.reykunyu.data.dict.Audio
+import com.kip.reykunyu.data.dict.ConjugatedExplanation
+import com.kip.reykunyu.data.dict.Language
+import com.kip.reykunyu.data.dict.Navi
+import com.kip.reykunyu.data.dict.Pronunciation
+import com.kip.reykunyu.data.dict.RichText
+import com.kip.reykunyu.data.dict.Source
+import com.kip.reykunyu.data.dict.typeInfoMap
+import com.kip.reykunyu.data.dict.typeMap
 import com.kip.reykunyu.data.offline.DictNavi
 import com.kip.reykunyu.data.online.OnlineTranslateSearch
 import com.kip.reykunyu.ui.theme.Typography
-import com.valentinilk.shimmer.*
+import com.valentinilk.shimmer.shimmer
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
@@ -96,7 +139,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                     Row(
                         modifier = Modifier
                             .padding(horizontal = 8.dp)
-                    ){
+                    ) {
                         AnimatedContent(targetState = showTypeInfo, label = "word type") { show ->
                             if (show) {
                                 Text(
@@ -106,7 +149,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                                     style = MaterialTheme.typography.displaySmall
                                         .copy(fontSize = 20.sp)
                                 )
-                            }else {
+                            } else {
                                 Text(
                                     text = navi.typeDisplay(),
                                     style = MaterialTheme.typography.displaySmall
@@ -163,7 +206,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
 
             //Translations
             Spacer(Modifier.padding(3.dp))
-            Divider()
+            HorizontalDivider()
             Spacer(Modifier.padding(6.dp))
 
             Text(
@@ -192,8 +235,12 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                     //meaning note
                     if (navi.meaningNote != null) {
 
-                        for (note in navi.meaningNote){
-                            RichTextComponent(richText = note, naviClick = naviClick, language = language)
+                        for (note in navi.meaningNote) {
+                            RichTextComponent(
+                                richText = note,
+                                naviClick = naviClick,
+                                language = language
+                            )
                         }
 
                     }
@@ -223,7 +270,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                                     Spacer(modifier = Modifier.weight(1f))
                                 }*/
 
-                                explanation.formula.forEachIndexed{ index, partition ->
+                                explanation.formula.forEachIndexed { index, partition ->
 
 
                                     val tooltip = when (partition.type) {
@@ -237,8 +284,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                                     if (partition.type == ConjugatedExplanation.Partition.Type.Root
                                         ||
                                         partition.type == ConjugatedExplanation.Partition.Type.Correction
-                                        )
-                                    {
+                                    ) {
                                         Text(
                                             text = partition.content,
                                             style = conjugationTextStyle,
@@ -246,12 +292,15 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                                         )
 
                                     } else {
-                                        PlainTooltipBox(tooltip = { Text(tooltip) }) {
+                                        TooltipBox(
+                                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                            tooltip = { Text(tooltip) },
+                                            state = rememberTooltipState()
+                                        ) {
                                             Text(
                                                 text = partition.content,
                                                 style = conjugationTextStyle,
-                                                color = getAffixColor(type = partition.type),
-                                                modifier = Modifier.tooltipTrigger()
+                                                color = getAffixColor(type = partition.type)
                                             )
                                         }
                                     }
@@ -312,19 +361,23 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                                         Row(
                                             modifier = Modifier
                                                 .padding(horizontal = 8.dp)
-                                        ){
-                                            AnimatedContent(targetState = showTypeInfo,
+                                        ) {
+                                            AnimatedContent(
+                                                targetState = showTypeInfo,
                                                 label = "type display"
                                             ) { show ->
                                                 if (show) {
                                                     Text(
-                                                        text = stringResource(id = typeInfoMap[explanation.type] ?: R.string.unknown),
+                                                        text = stringResource(
+                                                            id = typeInfoMap[explanation.type]
+                                                                ?: R.string.unknown
+                                                        ),
                                                         maxLines = 2,
                                                         overflow = TextOverflow.Ellipsis,
                                                         style = MaterialTheme.typography.displaySmall
                                                             .copy(fontSize = 20.sp)
                                                     )
-                                                }else {
+                                                } else {
                                                     Text(
                                                         text = typeMap[explanation.type] ?: "?",
                                                         style = MaterialTheme.typography.displaySmall
@@ -345,7 +398,12 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
                     }
 
                     //Affixes
-                    AffixTable(affixes = navi.affixes, show = expanded, language = language, naviClick = naviClick)
+                    AffixTable(
+                        affixes = navi.affixes,
+                        show = expanded,
+                        language = language,
+                        naviClick = naviClick
+                    )
 
                     //etymology
                     RichInfoModule(
@@ -452,7 +510,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
 
 
             //EXPAND AND FOLD BUTTON
-            if(expandable){
+            if (expandable) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
@@ -466,7 +524,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
 
                     AnimatedContent(targetState = expanded, label = "EXPAND/HIDE") { expandState ->
                         Text(
-                            text = if(!expandState) "VIEW MORE" else "VIEW LESS",
+                            text = if (!expandState) "VIEW MORE" else "VIEW LESS",
                             style = labelLarge,
 //                        color = MaterialTheme.colorScheme.tertiary
                         )
@@ -580,7 +638,7 @@ fun <T> AutoSpacer(
     if (elements.any{x -> x != null}) {
         Spacer(Modifier.padding(padding * .7f))
         if (divider) {
-            Divider(modifier = Modifier.padding(horizontal = 20.dp))
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp))
         }
         Spacer(Modifier.padding(padding * .3f))
     }
@@ -926,7 +984,10 @@ fun AffixTable(
 
                             for (affix in affixes) {
 
-                                LazyRow(Modifier.padding(bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                LazyRow(
+                                    Modifier.padding(bottom = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     item {
 
                                         //Affix+type
@@ -988,16 +1049,18 @@ fun AffixTable(
                                         }
 
 
-
-
                                     }
 
                                     item {
                                         Spacer(modifier = Modifier.padding(horizontal = 10.dp))
 
                                         //Components
-                                        if(affix.components != null) {
-                                            RichTextComponent(richText = affix.components, language = language, naviClick = naviClick)
+                                        if (affix.components != null) {
+                                            RichTextComponent(
+                                                richText = affix.components,
+                                                language = language,
+                                                naviClick = naviClick
+                                            )
                                         }
                                     }
 
@@ -1015,7 +1078,7 @@ fun AffixTable(
                                     }
                                 }
 
-                                Divider(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Spacer(Modifier.padding(6.dp))
 
                             }
