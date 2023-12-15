@@ -2,8 +2,14 @@ package com.kip.reykunyu.data.online
 
 import android.util.Log
 import com.kip.reykunyu.data.api.ReykunyuApi
-import com.kip.reykunyu.data.dict.*
-import kotlinx.serialization.*
+import com.kip.reykunyu.data.dict.Language
+import com.kip.reykunyu.data.dict.Navi
+import com.kip.reykunyu.data.dict.OnlineNaviRaw
+import com.kip.reykunyu.data.dict.SearchResultStatus
+import com.kip.reykunyu.data.dict.TranslateResult
+import com.kip.reykunyu.data.dict.TranslateSearchProvider
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 class OnlineTranslateSearch : TranslateSearchProvider{
     override suspend fun search(query: String, language: Language): TranslateResult {
@@ -14,7 +20,7 @@ class OnlineTranslateSearch : TranslateSearchProvider{
 
         } catch(e: Exception) {
             Log.e("REYKUNYU", e.toString())
-            return TranslateResult(SearchResultStatus.Error, emptyList(), emptyList(), info = "Encountered error when trying to communicate with Reykunyu")
+            return TranslateResult(SearchResultStatus.Error, emptyList(), emptyList(), info = "Error when communicating with Reykunyu: ${e.toString()}")
         }
         //Log.i("REYKUNYU", searchJson)
 
@@ -42,7 +48,7 @@ class OnlineTranslateSearch : TranslateSearchProvider{
         }
         catch (e: Exception) {
             Log.e("REYKUNYU", e.toString())
-            return TranslateResult(SearchResultStatus.Error, emptyList(), emptyList())
+            return TranslateResult(SearchResultStatus.Error, emptyList(), emptyList(), info = "Error when parsing data received from Reykunyu: ${e.toString()}")
         }
 
     }

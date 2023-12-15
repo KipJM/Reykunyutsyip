@@ -9,14 +9,12 @@ import com.kip.reykunyu.data.dict.Language
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.decodeFromString
 import java.io.File
 import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.Period
 import java.time.ZoneId
-import java.util.*
 
 data class NaviDictionary (
     val dictionary: Map<String, DictNavi>,
@@ -69,14 +67,13 @@ object OfflineDictionary {
             // Download dictionary
             try
             {
-
                 dictJson = ReykunyuApi.getDictionary()
                 Log.i("REYKUNYU", "DICTIONARY DOWNLOADED!")
             }
             catch (e: Exception)
             {
                 Log.e("REYKUNYU", e.toString())
-                return Response(ResponseStatus.Error, message = "Download error ($e)")
+                return Response(ResponseStatus.Error, message = "Error when downloading dictionary: $e")
             }
         }
 
@@ -114,7 +111,6 @@ object OfflineDictionary {
             ?.firstOrNull { it.name.contains(dictCacheFilename) }
 
         //Not found? Fallback to download from Internet.
-        @Suppress("FoldInitializerAndIfToElvis")
         if (dictionaryFile == null) {
             Log.i("REYKUNYU", "HMM")
             return Response(ResponseStatus.Error)
@@ -139,7 +135,7 @@ object OfflineDictionary {
         } catch (exception: IOException) {
             Log.e("REYKUNYU", exception.message ?: "")
             Response(ResponseStatus.Error,
-                message = "Unable to read the dictionary cache file! (${exception.message})")
+                message = "Unable to read the cached dictionary: ${exception.message}")
         }
 
 
@@ -169,7 +165,7 @@ object OfflineDictionary {
             Log.e("REYKUNYU", exception.message ?: "")
             return Response(
                 ResponseStatus.Error,
-                message = "Error when trying to save dictionary to cache. (${exception.message})"
+                message = "Error when trying to cache dictionary to disk: ${exception.message})"
             )
         }
 
@@ -196,7 +192,7 @@ object OfflineDictionary {
         }
         catch (e: Exception)
         {
-            Log.wtf("REYKUNYU", e)
+            Log.wtf("REYKUNYU", "convertDictionary error: $e")
             return false
         }
 

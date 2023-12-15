@@ -596,7 +596,7 @@ private fun AudioChip(audio: Audio) {
 
                 mediaPlayer.prepareAsync()
             } catch (e: Exception) {
-                Toast.makeText(context, "Failed to play audio!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Failed to play audio! ($e)", Toast.LENGTH_LONG).show()
                 Log.w(
                     "REYKUNYU", "ERROR while trying to play audio ${audio.file} " +
                             "($e)"
