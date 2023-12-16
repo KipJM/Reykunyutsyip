@@ -22,11 +22,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -38,6 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Button
@@ -50,6 +51,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
@@ -66,11 +68,13 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -78,6 +82,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -117,106 +124,127 @@ fun DictionaryScreen(
         searchViewModel.search(preferenceState.searchLanguage)
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    DictionarySearchBar(
-                        searchString = searchViewModel.searchInput,
-                        enabled = (dictState == OfflineDictState.Loaded),
-                        onInputChanged = {searchViewModel.updateSearchInput(it)},
-                        onSearch = onSearch
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = openNavDrawerAction) {
-                        Icon(
-                            imageVector = Icons.Filled.Menu,
-                            contentDescription = "Reykunyu sidebar menu access"
-                        )
-                    }
-                },
-                actions = {
-                    SearchTypeIcon(searchViewModel, enabled = (dictState == OfflineDictState.Loaded))
-                }
+    Box (Modifier.fillMaxSize().semantics { isTraversalGroup = true })
+    {
+        DictionarySearchBar(
+            searchString = searchViewModel.searchInput,
+            enabled = (dictState == OfflineDictState.Loaded),
+            onInputChanged = { searchViewModel.updateSearchInput(it) },
+            focusManager = focusManager,
+            onSearch = onSearch,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .semantics { traversalIndex = -1f }
+                .padding(top = 57.dp)
+                .padding(horizontal = 50.dp)
+
             )
-        },
 
-        content = { paddingValues ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(paddingValues)
-            ) {
-
-                when (dictState) {
-                    //Auto load dictionary on start
-                    is OfflineDictState.NotLoaded -> offlineDictViewModel.downloadDictionary()
-                    /*DownloadDictionaryButton {
-                        offlineDictViewModel.downloadDictionary()
-                    }*/
-                    is OfflineDictState.Loading -> {
-                        LoadingView(
-                            text = stringResource(R.string.downloading_dict)
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = openNavDrawerAction) {
+                            Icon(
+                                imageVector = Icons.Filled.Menu,
+                                contentDescription = "Reykunyu sidebar menu access"
+                            )
+                        }
+                    },
+                    actions = {
+                        SearchTypeIcon(
+                            searchViewModel,
+                            enabled = (dictState == OfflineDictState.Loaded)
                         )
-                    }
-                    is OfflineDictState.Loaded -> {
-                        AnimatedContent(targetState = searchViewModel.searchState, label = "ContentState")
-                        { state ->
-                            when (state) {
+                    },
+                    modifier = Modifier.wrapContentHeight(unbounded = true)
+                )
+            },
 
-                                is SearchState.Standby -> IconInfoView(
-                                    text = stringResource(id = R.string.search_help)
-                                ) {
-                                    Icon(Icons.Rounded.Search, null, modifier = it)
-                                }
+            content = { paddingValues ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(paddingValues)
+                ) {
 
-
-                                SearchState.Loading -> LoadingView(text = stringResource(id = R.string.loading))
-
-
-                                is SearchState.TranslateSuccess -> {
-                                    SearchDisplay(
-                                        fromNavi = state.result.fromNavi,
-                                        toNavi = state.result.toNavi,
-                                        language = preferenceState.searchLanguage,
-                                        naviAction = {
-                                            Log.i("REYKUNYU", "NAVI REF: $it")
-                                            searchViewModel.updateSearchInput(it)
-                                            onSearch()
-                                        }
-                                    )
-                                }
-
-                                is SearchState.AnnotatedSuccess -> TODO()
-                                is SearchState.RhymesSuccess -> TODO()
-                                is SearchState.SentenceSuccess -> TODO()
-
-
-                                is SearchState.Error -> {
-                                    var text = stringResource(R.string.error) + "(${state.info})"
-                                    var icon = painterResource(R.drawable.baseline_error_24)
-
-                                    when (state.id){
-                                        "COMING_SOON" -> {
-                                            text = state.info ?: "Coming soon!"
-                                            icon = painterResource(id = R.drawable.rhymes_24)
-                                        }
-                                    }
-                                    IconInfoView(
-                                        text = text, icon = {Icon(icon, null, modifier = it)}
-                                    )
-                                }
-                            }
+                    when (dictState) {
+                        //Auto load dictionary on start
+                        is OfflineDictState.NotLoaded -> offlineDictViewModel.downloadDictionary()
+                        /*DownloadDictionaryButton {
+                    offlineDictViewModel.downloadDictionary()
+                }*/
+                        is OfflineDictState.Loading -> {
+                            LoadingView(
+                                text = stringResource(R.string.downloading_dict)
+                            )
                         }
 
-                    }
-                    is OfflineDictState.Error -> {
-                        IconInfoView(text = stringResource(R.string.dictionary_error) + " (${dictState.message})")
+                        is OfflineDictState.Loaded -> {
+                            AnimatedContent(
+                                targetState = searchViewModel.searchState,
+                                label = "ContentState"
+                            )
+                            { state ->
+                                when (state) {
+
+                                    is SearchState.Standby -> IconInfoView(
+                                        text = stringResource(id = R.string.search_help)
+                                    ) {
+                                        Icon(Icons.Rounded.Search, null, modifier = it)
+                                    }
+
+
+                                    SearchState.Loading -> LoadingView(text = stringResource(id = R.string.loading))
+
+
+                                    is SearchState.TranslateSuccess -> {
+                                        SearchDisplay(
+                                            fromNavi = state.result.fromNavi,
+                                            toNavi = state.result.toNavi,
+                                            language = preferenceState.searchLanguage,
+                                            naviAction = {
+                                                Log.i("REYKUNYU", "NAVI REF: $it")
+                                                searchViewModel.updateSearchInput(it)
+                                                onSearch()
+                                            }
+                                        )
+                                    }
+
+                                    is SearchState.AnnotatedSuccess -> TODO()
+                                    is SearchState.RhymesSuccess -> TODO()
+                                    is SearchState.SentenceSuccess -> TODO()
+
+
+                                    is SearchState.Error -> {
+                                        var text =
+                                            stringResource(R.string.error) + "(${state.info})"
+                                        var icon = painterResource(R.drawable.baseline_error_24)
+
+                                        when (state.id) {
+                                            "COMING_SOON" -> {
+                                                text = state.info ?: "Coming soon!"
+                                                icon = painterResource(id = R.drawable.rhymes_24)
+                                            }
+                                        }
+                                        IconInfoView(
+                                            text = text, icon = { Icon(icon, null, modifier = it) }
+                                        )
+                                    }
+                                }
+                            }
+
+                        }
+
+                        is OfflineDictState.Error -> {
+                            IconInfoView(text = stringResource(R.string.dictionary_error) + " (${dictState.message})")
+                        }
                     }
                 }
             }
-        }
-    )
+        )
+    }
 
 
 }
@@ -290,8 +318,9 @@ private fun SearchTypeIcon(searchViewModel: DictionarySearchViewModel, enabled: 
 }
 
 @Composable
-fun SearchTypeMenuItem(type: SearchMode, onlineOnly: Boolean,
-                       searchViewModel: DictionarySearchViewModel, selectAction: (SearchMode) -> Unit
+fun SearchTypeMenuItem(
+    type: SearchMode, onlineOnly: Boolean,
+    searchViewModel: DictionarySearchViewModel, selectAction: (SearchMode) -> Unit
 ) {
     DropdownMenuItem(
         enabled = !searchViewModel.offlineMode || !onlineOnly,
@@ -304,7 +333,7 @@ fun SearchTypeMenuItem(type: SearchMode, onlineOnly: Boolean,
             )
         },
         onClick = { selectAction(type) },
-        modifier = if(searchViewModel.searchMode == type)
+        modifier = if (searchViewModel.searchMode == type)
             Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
         else Modifier
     )
@@ -322,7 +351,7 @@ fun DownloadDictionaryButton(
     ) {
         Button(
             onClick = clickAction,
-            ) {
+        ) {
             Text(
                 text = "Download Dictionary :)",
                 fontSize = 20.sp
@@ -374,16 +403,25 @@ fun DictionarySearchBar(
     enabled: Boolean,
     onInputChanged: (String) -> Unit,
     onSearch: () -> Unit,
+    focusManager: FocusManager,
     modifier: Modifier = Modifier
 ) {
+    var active by rememberSaveable { mutableStateOf(false) }
+
     //Search bar
     ProvideTextStyle(value = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp)) {
         DockedSearchBar(
             query = searchString,
             onQueryChange = onInputChanged,
-            onSearch = {onSearch()},
-            active = true,
-            onActiveChange = {},
+            onSearch = {
+                onSearch()
+                active = false
+            },
+            active = active,
+            onActiveChange = {
+                active = it
+            },
+            enabled = enabled,
             placeholder = {
                 Text(
                     text = stringResource(R.string.search_box),
@@ -393,7 +431,7 @@ fun DictionarySearchBar(
             },
             trailingIcon =
             {
-                IconButton(onClick = onSearch, enabled = enabled) {
+                IconButton(onClick = { onSearch(); active = false }, enabled = enabled) {
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = stringResource(R.string.search_description),
@@ -403,9 +441,21 @@ fun DictionarySearchBar(
             },
             modifier = modifier
 //                .fillMaxWidth()
-                .heightIn(30.dp, 60.dp)
+//                .heightIn(30.dp, 60.dp)
+
 
         ) {
+            repeat(4) { idx ->
+                val resultText = "Suggestion $idx"
+                ListItem(
+                    headlineContent = { Text(resultText) },
+                    supportingContent = { Text("Additional info") },
+                    leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+//                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+            }
 
         }
     }
@@ -430,10 +480,19 @@ fun DictionarySearchBar(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, language: Language, naviAction: (String) -> Unit) {
+fun SearchDisplay(
+    fromNavi: List<Pair<String, List<Navi>>>,
+    toNavi: List<Navi>,
+    language: Language,
+    naviAction: (String) -> Unit
+) {
 
     // 2 Pages: From Na'vi words and [Language] to Na'vi words
-    val initPage = if (fromNavi.isEmpty() && toNavi.isNotEmpty()) { 1 } else { 0 }
+    val initPage = if (fromNavi.isEmpty() && toNavi.isNotEmpty()) {
+        1
+    } else {
+        0
+    }
 
     val state = rememberPagerState(
         initialPage = initPage,
@@ -454,7 +513,7 @@ fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, 
                     selected = state.currentPage == index,
                     onClick = {
                         coroutineScope.launch {
-                              state.animateScrollToPage(index)
+                            state.animateScrollToPage(index)
                         }
                     },
                     text = { Text(text = title, maxLines = 2, overflow = TextOverflow.Ellipsis) }
@@ -462,8 +521,9 @@ fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, 
             }
         }
 
-        Surface{
-            HorizontalPager(state = state, pageSpacing = 10.dp,
+        Surface {
+            HorizontalPager(
+                state = state, pageSpacing = 10.dp,
                 userScrollEnabled = fromNavi.size <= 1
             ) { o ->
                 when (o) {
@@ -472,7 +532,11 @@ fun SearchDisplay(fromNavi: List<Pair<String, List<Navi>>>, toNavi: List<Navi>, 
                         language = language,
                         naviAction = { naviAction(it) }
                     )
-                    1 -> NaviList(naviList = toNavi, language = language, naviAction = { naviAction(it) })
+
+                    1 -> NaviList(
+                        naviList = toNavi,
+                        language = language,
+                        naviAction = { naviAction(it) })
                 }
             }
         }
@@ -488,7 +552,7 @@ fun FromNaviList(
     naviAction: (String) -> Unit
 ) {
 
-    if(fromNavi.size <= 1){ //Auto hide selection bar if only one element
+    if (fromNavi.size <= 1) { //Auto hide selection bar if only one element
         NaviList(naviList = fromNavi[0].second, language = language, naviAction = naviAction)
         return
     }
@@ -539,9 +603,9 @@ fun FromNaviList(
 }
 
 @Composable
-fun NaviList(naviList: List<Navi>, language:Language, naviAction: (String) -> Unit) {
+fun NaviList(naviList: List<Navi>, language: Language, naviAction: (String) -> Unit) {
 
-    if(naviList.isEmpty()) {
+    if (naviList.isEmpty()) {
         IconInfoView(text = stringResource(R.string.results_empty)) {
             Icon(Icons.Rounded.Info, null, modifier = it)
         }
@@ -558,17 +622,17 @@ fun NaviList(naviList: List<Navi>, language:Language, naviAction: (String) -> Un
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.simpleVerticalScrollbar(state)
     ) {
-        items(naviList) {item ->
+        items(naviList) { item ->
             NaviCard(
                 navi = item,
                 language = language,
                 naviClick = { naviAction(it) },
                 expanded = expandedList[item]!!,
-                toggleExpand = {expandedList[item] = !expandedList[item]!!}
+                toggleExpand = { expandedList[item] = !expandedList[item]!! }
             )
         }
 
-        item{
+        item {
             Text(
                 text = stringResource(R.string.end_of_list),
                 style = MaterialTheme.typography.headlineMedium
@@ -577,7 +641,6 @@ fun NaviList(naviList: List<Navi>, language:Language, naviAction: (String) -> Un
         }
     }
 }
-
 
 
 fun Modifier.simpleVerticalScrollbar(
@@ -615,7 +678,6 @@ fun Modifier.simpleVerticalScrollbar(
         }
     }
 }
-
 
 
 @Composable
