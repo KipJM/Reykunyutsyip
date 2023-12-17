@@ -1,6 +1,7 @@
 package com.kip.reykunyu.data.dict
 
 import android.util.Log
+import com.kip.reykunyu.R
 import com.kip.reykunyu.data.api.ReykunyuApi
 import kotlinx.serialization.Serializable
 
@@ -36,7 +37,11 @@ data class NaviSuggestion(
     val word: String,
     val type: String? = null,
     val explanation: String? = null
-)
+){
+    fun typeDetails(): Int {
+        return typeInfoMap[typeMap.entries.find { it.value == type }?.key] ?: R.string.unknown
+    }
+}
 
 enum class SuggestionsStatus{
     Standby,
@@ -68,9 +73,9 @@ object UniversalSuggestionsRepository: SuggestionsRepository {
     ): SuggestionsResult {
         return when(mode){
             SearchMode.Translate -> TranslateSuggestionsProvider().suggest(query, language)
-            SearchMode.Sentence -> TODO()
-            SearchMode.Annotated -> TODO()
-            SearchMode.Rhymes -> TODO()
+            SearchMode.Sentence -> SuggestionsResult(SuggestionsStatus.Error, info = "Coming soon!(TM)") //TODO
+            SearchMode.Annotated -> SuggestionsResult(SuggestionsStatus.Error, info = "Coming soon!(TM)") //TODO
+            SearchMode.Rhymes -> SuggestionsResult(SuggestionsStatus.Error, info = "Coming soon!(TM)") //TODO
             SearchMode.Offline -> SuggestionsResult(SuggestionsStatus.Success) //No suggestions for offline mode
         }
     }

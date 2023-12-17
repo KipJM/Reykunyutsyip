@@ -60,6 +60,8 @@ class DictionarySearchViewModel: ViewModel() {
                 searchSuggestions = UniversalSuggestionsRepository.suggest(
                     query = searchInput, language = language, mode = searchMode)
             }
+        }else{
+            searchSuggestions = SuggestionsResult(SuggestionsStatus.Standby)
         }
     }
 

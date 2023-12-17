@@ -2,7 +2,6 @@
 
 package com.kip.reykunyu.ui.screens
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -16,6 +15,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,7 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Button
@@ -95,8 +95,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kip.reykunyu.R
 import com.kip.reykunyu.data.dict.Language
 import com.kip.reykunyu.data.dict.Navi
+import com.kip.reykunyu.data.dict.NaviSuggestion
 import com.kip.reykunyu.data.dict.SearchMode
+import com.kip.reykunyu.data.dict.SuggestionsResult
+import com.kip.reykunyu.data.dict.SuggestionsStatus
 import com.kip.reykunyu.ui.components.NaviCard
+import com.kip.reykunyu.ui.components.WordTypeCard
 import com.kip.reykunyu.viewmodels.DictionarySearchViewModel
 import com.kip.reykunyu.viewmodels.OfflineDictState
 import com.kip.reykunyu.viewmodels.OfflineDictionaryViewModel
@@ -119,28 +123,36 @@ fun DictionaryScreen(
     val dictState = offlineDictViewModel.offlineDictState
     val preferenceState = preferenceViewModel.preferenceState.collectAsState().value
 
+    val onQueryUpdate = { text: String ->
+        searchViewModel.updateSearchInput(text)
+        searchViewModel.updateSuggestions(preferenceState.searchLanguage)
+    }
     val onSearch = {
         focusManager.clearFocus()
         searchViewModel.search(preferenceState.searchLanguage)
     }
 
-    Box (Modifier.fillMaxSize().semantics { isTraversalGroup = true })
+    Box (
+        Modifier
+            .fillMaxSize()
+            .semantics { isTraversalGroup = true })
     {
         DictionarySearchBar(
             searchString = searchViewModel.searchInput,
             enabled = (dictState == OfflineDictState.Loaded),
-            onInputChanged = {
-                searchViewModel.updateSearchInput(it)
-                searchViewModel.updateSuggestions(preferenceState.searchLanguage)
-                             },
+            onInputChanged = onQueryUpdate,
+            suggestions = searchViewModel.searchSuggestions,
             focusManager = focusManager,
             onSearch = onSearch,
+            onSuggestionSelect = {
+                onQueryUpdate(it)
+                onSearch()
+            },
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .semantics { traversalIndex = -1f }
                 .padding(top = 57.dp)
                 .padding(horizontal = 50.dp)
-
             )
 
         Scaffold(
@@ -208,8 +220,7 @@ fun DictionaryScreen(
                                             toNavi = state.result.toNavi,
                                             language = preferenceState.searchLanguage,
                                             naviAction = {
-                                                Log.i("REYKUNYU", "NAVI REF: $it")
-                                                searchViewModel.updateSearchInput(it)
+                                                onQueryUpdate(it)
                                                 onSearch()
                                             }
                                         )
@@ -406,10 +417,39 @@ fun DictionarySearchBar(
     enabled: Boolean,
     onInputChanged: (String) -> Unit,
     onSearch: () -> Unit,
+    suggestions: SuggestionsResult,
+    onSuggestionSelect: (String) -> Unit,
     focusManager: FocusManager,
     modifier: Modifier = Modifier
 ) {
+    @Composable
+    fun SuggestionItem(suggestion: NaviSuggestion, onSuggestionSelect: (String) -> Unit){
+        ListItem(
+            headlineContent = { Text(suggestion.word) },
+            supportingContent = {
+                suggestion.explanation?.let {
+                    Text(
+                        text = it
+                    )
+                }
+            },
+            leadingContent = {
+                suggestion.type?.let {
+                    WordTypeCard(
+                        typeDetails = suggestion.typeDetails(),
+                        typeDisplay = it
+                    )
+                }
+            },
+            modifier = Modifier.clickable{onSuggestionSelect(suggestion.word)}
+        )
+    }
+    
     var active by rememberSaveable { mutableStateOf(false) }
+    val suggestionSelectAction = { text:String ->
+        onSuggestionSelect(text)
+        active = false
+    }
 
     //Search bar
     ProvideTextStyle(value = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp)) {
@@ -448,19 +488,89 @@ fun DictionarySearchBar(
 
 
         ) {
-            repeat(4) { idx ->
-                val resultText = "Suggestion $idx"
-                ListItem(
-                    headlineContent = { Text(resultText) },
-                    supportingContent = { Text("Additional info") },
-                    leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
-                    modifier = Modifier
+            when(suggestions.status){
+                SuggestionsStatus.Standby -> {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier
                         .fillMaxWidth()
-//                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                )
+                        .padding(top = 100.dp)){
+                        Text(text = "No suggestions...")
+                    }
+                }
+                SuggestionsStatus.Loading -> {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 100.dp)){
+                        CircularProgressIndicator()
+                    }
+                }
+                SuggestionsStatus.Success -> {
+                    if(suggestions.fromNavi.isNullOrEmpty() && suggestions.toNavi.isNullOrEmpty()){
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 100.dp)){
+                            Text(text = "No suggestions...")
+                        }
+                    }
+
+                    val state: LazyListState = rememberLazyListState()
+                    LazyColumn(
+                        state = state,
+                        modifier = Modifier.simpleVerticalScrollbar(state)
+                    ) {
+                        if(!suggestions.fromNavi.isNullOrEmpty()){
+                            item{
+                                Spacer(Modifier.padding(7.dp))
+                                Text(
+                                    text = "from Na'vi",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.padding(horizontal = 20.dp)
+                                )
+
+                            }
+                            for (suggestion in suggestions.fromNavi) {
+                                item {
+                                    SuggestionItem(suggestion = suggestion, onSuggestionSelect = suggestionSelectAction)
+                                }
+                            }
+                        }
+
+                        if(!suggestions.toNavi.isNullOrEmpty()){
+                            item{
+                                Spacer(Modifier.padding(7.dp))
+                                Text(
+                                    text = "to Na'vi",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.padding(horizontal = 20.dp)
+                                )
+
+                            }
+
+                            for (suggestion in suggestions.toNavi) {
+                                item {
+                                    SuggestionItem(suggestion = suggestion, onSuggestionSelect = suggestionSelectAction)
+                                }
+                            }
+                            
+
+                        }
+
+                    }
+
+
+                }
+                SuggestionsStatus.Error -> {
+                    ListItem(
+                        headlineContent = { Text(stringResource(id = R.string.error)) },
+                        supportingContent = { Text(text = suggestions.info ?: "")},
+                        leadingContent = { Icon(Icons.Filled.Warning, contentDescription = null)}
+                    )
+                }
             }
 
+
         }
+
+        
     }
 
 //    OutlinedTextField(
@@ -750,3 +860,5 @@ fun FancyIndicator(color: Color, modifier: Modifier = Modifier) {
             .border(BorderStroke(2.dp, color), RoundedCornerShape(5.dp))
     )
 }
+
+

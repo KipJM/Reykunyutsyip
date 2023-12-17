@@ -523,7 +523,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
 }
 
 @Composable
-private fun WordTypeCard(typeDetails: Int, typeDisplay: String) {
+public fun WordTypeCard(typeDetails: Int, typeDisplay: String) {
     var showTypeInfo by remember { mutableStateOf(false) }
     Card(
         onClick = {
