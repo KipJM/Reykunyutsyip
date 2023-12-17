@@ -21,8 +21,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -130,35 +133,7 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
 
                 // WordType
                 Spacer(modifier = Modifier.padding(5.dp))
-                var showTypeInfo by remember { mutableStateOf(false) }
-                Card(
-                    onClick = {
-                        showTypeInfo = !showTypeInfo
-                    }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                    ) {
-                        AnimatedContent(targetState = showTypeInfo, label = "word type") { show ->
-                            if (show) {
-                                Text(
-                                    text = stringResource(id = navi.typeDetails()),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    style = MaterialTheme.typography.displaySmall
-                                        .copy(fontSize = 20.sp)
-                                )
-                            } else {
-                                Text(
-                                    text = navi.typeDisplay(),
-                                    style = MaterialTheme.typography.displaySmall
-                                        .copy(fontSize = 20.sp)
-                                )
-                            }
-                        }
-                    }
-                }
+                WordTypeCard(navi.typeDetails(), navi.typeDisplay())
             }
 
             //Pronunciation
@@ -543,6 +518,45 @@ fun NaviCard(navi: Navi, language: Language, naviClick: (String) -> Unit, expand
             }
 
             Spacer(Modifier.padding(6.dp))
+        }
+    }
+}
+
+@Composable
+private fun WordTypeCard(typeDetails: Int, typeDisplay: String) {
+    var showTypeInfo by remember { mutableStateOf(false) }
+    Card(
+        onClick = {
+            showTypeInfo = !showTypeInfo
+        }
+    ) {
+        Row(
+            modifier = Modifier
+                .heightIn(max = 30.dp)
+                .padding(horizontal = 8.dp)
+                .fillMaxHeight()
+                .offset(y = -7.dp) //TODO: hacky fix
+        ) {
+            AnimatedContent(targetState = showTypeInfo, label = "word type") { show ->
+                if (show) {
+                    Text(
+                        text = stringResource(id = typeDetails),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.displaySmall
+                            .copy(fontSize = 20.sp),
+                        modifier = Modifier
+                    )
+                } else {
+                    Text(
+                        text = typeDisplay,
+                        style = MaterialTheme.typography.displaySmall
+                            .copy(fontSize = 20.sp),
+                        modifier = Modifier
+
+                    )
+                }
+            }
         }
     }
 }
@@ -942,7 +956,7 @@ fun AffixTable(
     if (affixes.isNullOrEmpty()) {
         return
     }
-    
+
     //Collapsable card
     var expanded by remember { mutableStateOf(false) }
 
