@@ -119,7 +119,7 @@ fun SettingsScreen(
 
                 item {
                     if (creditsText != null) {
-                        RichTextPanel(title = "Credits", richText = creditsText)
+                        RichTextPanel(title = "Privacy & Credits", richText = creditsText)
                     }
                 }
 
