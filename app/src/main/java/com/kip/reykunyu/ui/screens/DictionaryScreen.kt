@@ -129,7 +129,10 @@ fun DictionaryScreen(
         DictionarySearchBar(
             searchString = searchViewModel.searchInput,
             enabled = (dictState == OfflineDictState.Loaded),
-            onInputChanged = { searchViewModel.updateSearchInput(it) },
+            onInputChanged = {
+                searchViewModel.updateSearchInput(it)
+                searchViewModel.updateSuggestions(preferenceState.searchLanguage)
+                             },
             focusManager = focusManager,
             onSearch = onSearch,
             modifier = Modifier

@@ -1,7 +1,11 @@
 package com.kip.reykunyu.data.dict
 
 import com.kip.reykunyu.data.dict.*
-import kotlinx.serialization.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializer
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
@@ -50,6 +54,7 @@ data class OnlineNaviRaw(
     val wordType: String,
 
     val translations: List<Map<String, String>>,
+    @SerialName("short_translation")
     val shortTranslation: String? = null,
 
     val conjugated: List<ConjugatedElementRaw>? = null,

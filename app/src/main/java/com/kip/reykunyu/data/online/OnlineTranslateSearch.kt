@@ -32,7 +32,8 @@ class OnlineTranslateSearch : TranslateSearchProvider{
     fun convertTranslationResult(json: String): TranslateResult{
         try{
             //Parse json to serialized data
-            val resultsRaw = ReykunyuApi.jsonFormat.decodeFromString<OnlineTranslateResult>(json)
+            val resultsRaw =
+                ReykunyuApi.jsonFormat.decodeFromString<OnlineTranslateResult>(json)
 
             //from Na'vi extraction
             val fromNavi: MutableList<Pair<String, List<Navi>>> = mutableListOf()

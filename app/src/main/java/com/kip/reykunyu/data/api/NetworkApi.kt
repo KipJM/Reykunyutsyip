@@ -63,8 +63,8 @@ interface ReykunyuApiService {
 object ReykunyuApi {
     @OptIn(ExperimentalSerializationApi::class)
     val jsonFormat = Json {
-        isLenient = true
         ignoreUnknownKeys = true
+        isLenient = true
         explicitNulls = false
     }
 
@@ -85,5 +85,13 @@ object ReykunyuApi {
 
     suspend fun search(query: String, language: Language): String {
         return retrofitService.search(query, language.toString())
+    }
+
+    suspend fun getSuggestionsLang(query: String, language: Language): String {
+        return retrofitService.suggestLang(query, language.toString())
+    }
+
+    suspend fun getSuggestionsNavi(query: String, language: Language): String {
+        return retrofitService.suggestNavi(query, language.toString())
     }
 }

@@ -5,7 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kip.reykunyu.data.dict.*
+import com.kip.reykunyu.data.dict.Language
+import com.kip.reykunyu.data.dict.SearchMode
+import com.kip.reykunyu.data.dict.SearchResultStatus
+import com.kip.reykunyu.data.dict.SuggestionsResult
+import com.kip.reykunyu.data.dict.SuggestionsStatus
+import com.kip.reykunyu.data.dict.TranslateResult
+import com.kip.reykunyu.data.dict.UniversalSearchRepository
+import com.kip.reykunyu.data.dict.UniversalSuggestionsRepository
 import kotlinx.coroutines.launch
 
 sealed interface SearchState {
@@ -21,7 +28,6 @@ sealed interface SearchState {
     data class Error(val info: String?, val id: String? = null) : SearchState
 }
 
-
 //Handles all the search stuff
 class DictionarySearchViewModel: ViewModel() {
 
@@ -29,6 +35,9 @@ class DictionarySearchViewModel: ViewModel() {
         private set
 
     var searchInput by mutableStateOf("")
+        private set
+
+    var searchSuggestions by mutableStateOf(SuggestionsResult())
         private set
 
     var searchMode by mutableStateOf(SearchMode.Translate) //TODO: Currently useless :/
@@ -43,6 +52,16 @@ class DictionarySearchViewModel: ViewModel() {
         searchInput = input
     }
 
+    fun updateSuggestions(language: Language) {
+        if(searchInput.count() >= 3){
+            //Start suggesting!
+            searchSuggestions = SuggestionsResult(SuggestionsStatus.Loading)
+            viewModelScope.launch {
+                searchSuggestions = UniversalSuggestionsRepository.suggest(
+                    query = searchInput, language = language, mode = searchMode)
+            }
+        }
+    }
 
     fun updateSearchType(type: SearchMode) {
         searchMode = type
