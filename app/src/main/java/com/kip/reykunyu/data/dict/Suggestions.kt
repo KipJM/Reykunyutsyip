@@ -117,7 +117,7 @@ suspend fun fromNaviSuggestions(query: String, language: Language): List<NaviSug
 suspend fun toNaviSuggestions(query: String, language: Language): List<NaviSuggestion>
 {
 
-    val suggestJson = ReykunyuApi.getSuggestionsLang(query, language);
+    val suggestJson = "{results:[]}"//ReykunyuApi.getSuggestionsLang(query, language); //API Removed
     return convertSuggestions(suggestJson)
 }
 

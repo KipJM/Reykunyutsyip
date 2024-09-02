@@ -193,7 +193,7 @@ object OfflineDictionary {
         catch (e: Exception)
         {
             Log.wtf("REYKUNYU", "convertDictionary error: $e")
-            return false
+            return true //DEBUG, CHANGE BACK TO FALSE
         }
 
         //Save dictionary to class, and also

@@ -6,7 +6,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
@@ -21,6 +20,9 @@ data class RichTextPartitionRaw(
     val naviRef: OnlineNaviRaw? = null
 )
 
+private val json1 = Json { ignoreUnknownKeys = true }
+
+
 @OptIn(ExperimentalSerializationApi::class)
 @Serializer(forClass = RichTextPartitionRaw::class)
 object RichTextComponentRawSerializer : KSerializer<RichTextPartitionRaw> {
@@ -29,9 +31,9 @@ object RichTextComponentRawSerializer : KSerializer<RichTextPartitionRaw> {
 
         //Either it's a text(URL) element, or a Na'vi ref element
         return try {
-            RichTextPartitionRaw(text = Json.decodeFromString<String>(json.toString()))
+            RichTextPartitionRaw(text = json1.decodeFromString<String>(json.toString()))
         } catch (e: Exception) {
-            RichTextPartitionRaw(naviRef = Json.decodeFromString<OnlineNaviRaw>(json.toString()))
+            RichTextPartitionRaw(naviRef = json1.decodeFromString<OnlineNaviRaw>(json.toString()))
         }
 
     }

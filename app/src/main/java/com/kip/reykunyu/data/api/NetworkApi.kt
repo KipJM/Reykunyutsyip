@@ -19,7 +19,7 @@ private const val LANG_LOOKUP_DEPRECATED =
     "search"
 
 
-//fwew search works both ways. Cool!
+//fwew-search works both ways. Cool!
 private const val SEARCH =
     "fwew-search"
 
@@ -53,10 +53,10 @@ interface ReykunyuApiService {
     suspend fun search(@Query("query") query: String, @Query("language") language: String): String
 
     @GET(LANG_SUGGEST)
-    suspend fun suggestLang(@Query("query") query: String, @Query("language") language: String): String
+    suspend fun suggestLang(@Query("query") query: String, @Query("language") language: String, @Query("dialect") dialect: String): String
 
     @GET(NAVI_SUGGEST)
-    suspend fun suggestNavi(@Query("tìpawm") query: String, @Query("language") language: String): String
+    suspend fun suggestNavi(@Query("tìpawm") query: String, @Query("language") language: String, @Query("dialect") dialect: String): String
 
 }
 
@@ -88,10 +88,10 @@ object ReykunyuApi {
     }
 
     suspend fun getSuggestionsLang(query: String, language: Language): String {
-        return retrofitService.suggestLang(query, language.toString())
+        return retrofitService.suggestLang(query, language.toString(), "FN") //TODO
     }
 
     suspend fun getSuggestionsNavi(query: String, language: Language): String {
-        return retrofitService.suggestNavi(query, language.toString())
+        return retrofitService.suggestNavi(query, language.toString(), "FN") //TODO
     }
 }

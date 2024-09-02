@@ -132,11 +132,12 @@ fun DictionaryScreen(
         searchViewModel.search(preferenceState.searchLanguage)
     }
 
-    Box (
+    Box(
         Modifier
             .fillMaxSize()
             .semantics { isTraversalGroup = true })
     {
+
         DictionarySearchBar(
             searchString = searchViewModel.searchInput,
             enabled = (dictState == OfflineDictState.Loaded),
@@ -151,9 +152,10 @@ fun DictionaryScreen(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .semantics { traversalIndex = -1f }
+                .fillMaxWidth()
                 .padding(top = 57.dp)
-                .padding(horizontal = 50.dp)
-            )
+                .padding(horizontal = 70.dp)
+        )
 
         Scaffold(
             topBar = {
@@ -188,8 +190,8 @@ fun DictionaryScreen(
                         //Auto load dictionary on start
                         is OfflineDictState.NotLoaded -> offlineDictViewModel.downloadDictionary()
                         /*DownloadDictionaryButton {
-                    offlineDictViewModel.downloadDictionary()
-                }*/
+                offlineDictViewModel.downloadDictionary()
+            }*/
                         is OfflineDictState.Loading -> {
                             LoadingView(
                                 text = stringResource(R.string.downloading_dict)
@@ -239,11 +241,13 @@ fun DictionaryScreen(
                                         when (state.id) {
                                             "COMING_SOON" -> {
                                                 text = state.info ?: "Coming soon!"
-                                                icon = painterResource(id = R.drawable.rhymes_24)
+                                                icon =
+                                                    painterResource(id = R.drawable.rhymes_24)
                                             }
                                         }
                                         IconInfoView(
-                                            text = text, icon = { Icon(icon, null, modifier = it) }
+                                            text = text,
+                                            icon = { Icon(icon, null, modifier = it) }
                                         )
                                     }
                                 }
@@ -258,8 +262,8 @@ fun DictionaryScreen(
                 }
             }
         )
-    }
 
+    }
 
 }
 
