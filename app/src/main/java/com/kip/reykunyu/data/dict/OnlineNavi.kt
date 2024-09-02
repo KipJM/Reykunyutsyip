@@ -1,6 +1,5 @@
 package com.kip.reykunyu.data.dict
 
-import com.kip.reykunyu.data.dict.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -45,6 +44,40 @@ object AdaptiveRichTextRawSerializer : KSerializer<AdaptiveRichTextRaw> {
     }
 }
 
+@Serializable(with = AdaptiveNaviRefSerializer::class)
+data class AdaptiveNaviRef(
+    val text: String? = null,
+
+    val navi: OnlineNaviRaw? = null
+) {
+    fun getNaviWord(): String? {
+        if (text != null) {
+            return text
+        }
+        if (navi != null) {
+            return navi.navi
+        }
+        //else
+        return null
+    }
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+@Serializer(forClass = AdaptiveNaviRef::class)
+object AdaptiveNaviRefSerializer : KSerializer<AdaptiveNaviRef> {
+    override fun deserialize(decoder: Decoder): AdaptiveNaviRef {
+        val json = (decoder as JsonDecoder).decodeJsonElement()
+
+        //Either it's Rich text, or plain text
+        return try {
+            AdaptiveNaviRef(text = Json.decodeFromString<String>(json.toString()))
+        } catch (e: Exception) {
+            AdaptiveNaviRef(navi = Json.decodeFromString<OnlineNaviRaw>(json.toString()))
+        }
+
+    }
+}
+
 
 @Serializable
 data class OnlineNaviRaw(
@@ -52,6 +85,9 @@ data class OnlineNaviRaw(
     val navi: String,
     @SerialName("type")
     val wordType: String,
+
+    val word: Map<String, String>?,
+    val word_raw: Map<String, String>?,
 
     val translations: List<Map<String, String>>,
     @SerialName("short_translation")
@@ -67,8 +103,8 @@ data class OnlineNaviRaw(
     val meaningNote: AdaptiveRichTextRaw? = null,
     val etymology: AdaptiveRichTextRaw? = null,
 
-    val seeAlso: List<OnlineNaviRaw>? = null,
-    val derived: List<OnlineNaviRaw>? = null,
+    val seeAlso: List<AdaptiveNaviRef>? = null,
+    val derived: List<AdaptiveNaviRef>? = null,
 
     val image: String? = null,
 
@@ -115,8 +151,8 @@ data class OnlineNaviRaw(
             infixes = infixes,
             meaningNote = meaningNoteList,
             etymology = etymology?.convertToRichText(),
-            seeAlso = seeAlso?.map { o -> o.navi },
-            derived = derived?.map { o -> o.navi },
+            seeAlso = seeAlso?.map { o -> o.getNaviWord() ?: ""},
+            derived = derived?.map { o -> o.getNaviWord() ?: ""},
             image = image,
             status = status,
             statusNote = RichText.create(statusNote),

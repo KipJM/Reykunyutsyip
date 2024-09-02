@@ -6,6 +6,8 @@ import com.kip.reykunyu.data.api.Response
 import com.kip.reykunyu.data.api.ResponseStatus
 import com.kip.reykunyu.data.api.ReykunyuApi
 import com.kip.reykunyu.data.dict.Language
+import com.kip.reykunyu.data.dict.Navi
+import com.kip.reykunyu.data.dict.OnlineNaviRaw
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -17,19 +19,22 @@ import java.time.Period
 import java.time.ZoneId
 
 data class NaviDictionary (
-    val dictionary: Map<String, DictNavi>,
-    val indexedNavi: List<DictNavi> = dictionary.values.toList(),
-    var indexedTranslations: List<Pair<String, Int>> = listOf()
+    val dictionary: Map<String, Navi>,
+    val indexedNavi: List<Navi> = dictionary.values.toList(),
+    var translationMap: Map<String, Int> = emptyMap(),
+    var translations: List<String> = emptyList()
     ) {
 
     //Update indexed translations based on language
     fun updateLang(language: Language) {
-        indexedTranslations = mutableListOf()
+        translationMap = mutableMapOf()
+        translations = mutableListOf()
         indexedNavi.forEachIndexed{ index, navi ->
             for (translation in navi.translations) {
                 if (translation[language] != null) {
-                    indexedTranslations +=
+                    translationMap +=
                         Pair(translation[language]!!, index)
+                    translations += translation[language]!!
                 }
             }
         }
@@ -43,7 +48,7 @@ object OfflineDictionary {
 
     var dictionary: NaviDictionary? = null
         private set
-    private val emptyDict: NaviDictionary = NaviDictionary(emptyMap(), emptyList(), emptyList())
+    private val emptyDict: NaviDictionary = NaviDictionary(emptyMap())
 
     /**
      * A null-safe access for the dictionary. Returns an empty dictionary if not loaded. READ ONLY
@@ -64,6 +69,7 @@ object OfflineDictionary {
             dictJson = diskResponse.content!!
         }
         else {
+            Log.i("REYKUNYU", "START DICTIONARY DOWNLOAD")
             // Download dictionary
             try
             {
@@ -78,7 +84,7 @@ object OfflineDictionary {
         }
 
 
-
+        Log.i("REYKUNYU", "DICT DOWNLOADED, STARTING PARSE")
         //Convert the dictionary json into internal data structure
         return if (
             convertDictionary(json = dictJson) // parse dictionary
@@ -177,27 +183,27 @@ object OfflineDictionary {
      * Convert Json to the Na'vi dictionary and saves it. Returns true if conversion succeeded.
      */
     private fun convertDictionary(json: String): Boolean {
-        val naviDict = mutableMapOf<String, DictNavi>()
+        val naviDict = mutableMapOf<String, Navi>()
         try {
 
             //Parse
-            val dictRaw =
-                ReykunyuApi.jsonFormat.decodeFromString<Map<String, DictNaviRaw>>(json)
+            val listRaw =
+                ReykunyuApi.jsonFormat.decodeFromString<List<OnlineNaviRaw>>(json)
 
             //Convert raw Navi to DictNavi
-            for (naviRaw in dictRaw) {
-                naviDict[naviRaw.key] = naviRaw.value.toDictNavi()
+            for (naviRaw in listRaw) {
+                naviDict[naviRaw.navi] = naviRaw.toNavi()
             }
 
         }
         catch (e: Exception)
         {
             Log.wtf("REYKUNYU", "convertDictionary error: $e")
-            return true //DEBUG, CHANGE BACK TO FALSE
+            return false
         }
 
         //Save dictionary to class, and also
-        dictionary = NaviDictionary(naviDict.toMap(), indexedTranslations = mutableListOf())
+        dictionary = NaviDictionary(naviDict.toMap())
         //Defaults to english, it will get auto-recomputed when searching with a different language
         dictionary?.updateLang(Language.English)
 

@@ -1,6 +1,11 @@
 package com.kip.reykunyu.data.offline
 
-import com.kip.reykunyu.data.dict.*
+import com.kip.reykunyu.data.dict.Language
+import com.kip.reykunyu.data.dict.Navi
+import com.kip.reykunyu.data.dict.SearchResultStatus
+import com.kip.reykunyu.data.dict.TranslateResult
+import com.kip.reykunyu.data.dict.TranslateSearchProvider
+import com.kip.reykunyu.data.dict.UniversalSearchRepository
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import kotlin.math.abs
 
@@ -32,15 +37,15 @@ class OfflineTranslateSearch : TranslateSearchProvider {
             Pair(word, naviSearch(dictionary, word))
         }
 
+
         // =>Na'vi search
         val toNaviSearch = FuzzySearch.extractSorted(
             query,
-            dictionary.indexedTranslations,
-            { it.first },
+            dictionary.translations,
             relevanceLimit
-        ).map { it.referent.second }.distinct()
+        ).map { dictionary.translationMap[it.string] }.distinct()
 
-        val toNaviResults = toNaviSearch.map { dictionary.indexedNavi[it].toNavi() }
+        val toNaviResults = toNaviSearch.map { dictionary.indexedNavi[it!!] }
 
         return TranslateResult(SearchResultStatus.Success, fromNaviResults, toNaviResults)
     }
@@ -100,7 +105,7 @@ class OfflineTranslateSearch : TranslateSearchProvider {
         fromNaviSearch = fromNaviSearch.sortedByDescending { it.second }.toMutableList()
 
 
-        return fromNaviSearch.map { dictionary.indexedNavi[it.first.index].toNavi() }
+        return fromNaviSearch.map { dictionary.indexedNavi[it.first.index] }
     }
 
 }

@@ -12,6 +12,9 @@ data class NaviSuggestionRaw(
     val description: String? = null
 ){
     fun convert(): NaviSuggestion {
+        val title = title
+            .replace("<span class=\"stressed\">", "")
+            .replace("</span>", "")
         val type = description
             ?.substringAfter("<div class=\"ui horizontal label\">")
             ?.substringBefore("</div> ")
@@ -76,7 +79,7 @@ object UniversalSuggestionsRepository: SuggestionsRepository {
             SearchMode.Sentence -> SuggestionsResult(SuggestionsStatus.Error, info = "Coming soon!(TM)") //TODO
             SearchMode.Annotated -> SuggestionsResult(SuggestionsStatus.Error, info = "Coming soon!(TM)") //TODO
             SearchMode.Rhymes -> SuggestionsResult(SuggestionsStatus.Error, info = "Coming soon!(TM)") //TODO
-            SearchMode.Offline -> SuggestionsResult(SuggestionsStatus.Success) //No suggestions for offline mode
+            SearchMode.Offline -> SuggestionsResult(SuggestionsStatus.Error, info = "Suggestions are currently not available for offline dictionary.") //No suggestions for offline mode
         }
     }
 
@@ -109,7 +112,7 @@ class TranslateSuggestionsProvider: SuggestionsProvider{
 suspend fun fromNaviSuggestions(query: String, language: Language): List<NaviSuggestion>
 {
 
-    val suggestJson = ReykunyuApi.getSuggestionsNavi(query, language);
+    val suggestJson = ReykunyuApi.getSuggestionsNavi(query, language)
     return convertSuggestions(suggestJson)
 }
 
