@@ -2,9 +2,14 @@
 
 
 # An **unofficial** Android client for the [Reykunyu Na'vi dictionary](https://reykunyu.lu)
+![GitHub Release](https://img.shields.io/github/v/release/KipJM/Reykunyutsyip)
+<img src="https://img.shields.io/endpoint?url=https://apt.izzysoft.de/fdroid/api/v1/shield/com.kip.reykunyutsyip">  
 Reykunyu - someone who lets you discover things  
 Reykunyutsyìp - Little Reykunyu :)  
-### [Download latest version here!](https://github.com/kipjm/reykunyutsyip/releases/latest)
+### [Download latest version on GitHub!](https://github.com/kipjm/reykunyutsyip/releases/latest)
+[<img src="https://censorship.no/img/github-badge.png" width="200">](https://github.com/kipjm/reykunyutsyip/releases/latest)
+### [Or get it through IzzyOnDroid](https://apt.izzysoft.de/fdroid/index/apk/com.kip.reykunyutsyip)
+[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButton.svg" width="180">](https://apt.izzysoft.de/fdroid/index/apk/com.kip.reykunyutsyip)
 
 ## Info
 Reykunyutsyìp is an UNOFFICIAL Android client of Reykunyu. It is made by Kip, and is not affiliated with Reykunyu.
