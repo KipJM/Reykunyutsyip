@@ -79,6 +79,7 @@ object AdaptiveNaviRefSerializer : KSerializer<AdaptiveNaviRef> {
 }
 
 
+
 @Serializable
 data class OnlineNaviRaw(
     @SerialName("na'vi")

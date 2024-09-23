@@ -125,11 +125,11 @@ fun DictionaryScreen(
 
     val onQueryUpdate = { text: String ->
         searchViewModel.updateSearchInput(text)
-        searchViewModel.updateSuggestions(preferenceState.searchLanguage)
+        searchViewModel.updateSuggestions(preferenceState.searchLanguage, preferenceState.dialect)
     }
     val onSearch = {
         focusManager.clearFocus()
-        searchViewModel.search(preferenceState.searchLanguage)
+        searchViewModel.search(preferenceState.searchLanguage, preferenceState.dialect)
     }
 
     Box(

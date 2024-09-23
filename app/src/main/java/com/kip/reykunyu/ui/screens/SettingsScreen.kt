@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kip.reykunyu.R
+import com.kip.reykunyu.data.dict.Dialect
 import com.kip.reykunyu.data.dict.Language
 import com.kip.reykunyu.data.dict.RichText
 import com.kip.reykunyu.ui.components.RichTextComponent
@@ -72,7 +73,7 @@ fun SettingsScreen(
                     IconButton(onClick = openNavDrawerAction) {
                         Icon(
                             imageVector = Icons.Filled.Menu,
-                            contentDescription = "Reykunyu sidebar menu access"
+                            contentDescription = stringResource(R.string.reykunyu_sidebar_menu_access)
                         )
                     }
                 }
@@ -90,36 +91,44 @@ fun SettingsScreen(
             ) {
 
                 item {
-                    SectionHeader(title = "Search")
+                    SectionHeader(title = stringResource(R.string.settings_search))
                 }
 
                 item {
                     SearchLanguageSelector(
-                        display = "Search language",
+                        display = stringResource(R.string.settings_search_language),
                         preferenceState = preferenceState,
                         updatePrefAction = { preferenceViewModel.updateSearchLanguage(it) }
                     )
                 }
 
                 item {
-                    SectionHeader(title = "Info")
+                    DialectSelector(
+                        display = stringResource(R.string.settings_dialect),
+                        preferenceState = preferenceState,
+                        updatePrefAction = { preferenceViewModel.updateDialect(it) }
+                    )
+                }
+
+                item {
+                    SectionHeader(title = stringResource(R.string.settings_info_header))
                 }
 
                 item {
                     if (noticeText != null) {
-                        RichTextPanel(title = "Read me!", richText = noticeText)
+                        RichTextPanel(title = stringResource(R.string.settings_readme_header), richText = noticeText)
                     }
                 }
 
                 item {
                     if (infoText != null) {
-                        RichTextPanel(title = "Info", richText = infoText)
+                        RichTextPanel(title = stringResource(R.string.settings_info_header), richText = infoText)
                     }
                 }
 
                 item {
                     if (creditsText != null) {
-                        RichTextPanel(title = "Privacy & Credits", richText = creditsText)
+                        RichTextPanel(title = stringResource(R.string.settings_privacy_credits), richText = creditsText)
                     }
                 }
 
@@ -196,6 +205,66 @@ fun SearchLanguageSelector(
                         if (selectionOption == Language.Unknown) {
                             return@forEach
                         }
+
+                        DropdownMenuItem(
+                            text = { Text(stringResource(selectionOption.display)) },
+                            onClick = {
+                                updatePrefAction(selectionOption)
+                                expanded = false
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                        )
+                    }
+                }
+                Spacer(Modifier.padding(10.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DialectSelector(
+    display: String,
+    preferenceState: AppPreferenceState,
+    updatePrefAction: (Dialect) -> Unit
+) {
+    Card {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.padding(10.dp))
+
+            //Label
+            Text(display, style = MaterialTheme.typography.titleSmall, fontSize = 20.sp)
+
+            //Selector
+            var expanded by remember {
+                mutableStateOf(false)
+            }
+
+            val selectedDialect = preferenceState.dialect
+
+            Spacer(Modifier.padding(20.dp))
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                Crossfade(targetState = stringResource(selectedDialect.display)) {
+                    TextField(
+                        // The `menuAnchor` modifier must be passed to the text field for correctness.
+                        modifier = Modifier.menuAnchor(),
+                        readOnly = true,
+                        value = it,
+                        onValueChange = {},
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                    )
+                }
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    Dialect.values().forEach { selectionOption ->
 
                         DropdownMenuItem(
                             text = { Text(stringResource(selectionOption.display)) },

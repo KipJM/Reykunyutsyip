@@ -1,5 +1,6 @@
 package com.kip.reykunyu.data.offline
 
+import com.kip.reykunyu.data.dict.Dialect
 import com.kip.reykunyu.data.dict.Language
 import com.kip.reykunyu.data.dict.Navi
 import com.kip.reykunyu.data.dict.SearchResultStatus
@@ -14,7 +15,8 @@ const val relevanceLimit = 85
 class OfflineTranslateSearch : TranslateSearchProvider {
 
 
-    override suspend fun search(query: String, language: Language): TranslateResult {
+    override suspend fun search(query: String, language: Language, dialect: Dialect): TranslateResult {
+        // TODO: Dialect in offline dictionary
         if (OfflineDictionary.dictionary == null) {
             //Cancels search if dictionary is not here. This (hopefully) should be unreachable code!
             return TranslateResult(
@@ -45,7 +47,7 @@ class OfflineTranslateSearch : TranslateSearchProvider {
             relevanceLimit
         ).map { dictionary.translationMap[it.string] }.distinct()
 
-        val toNaviResults = toNaviSearch.map { dictionary.indexedNavi[it!!] }
+        val toNaviResults = toNaviSearch.map { dictionary.indexedNavi[it!!].toNavi() }
 
         return TranslateResult(SearchResultStatus.Success, fromNaviResults, toNaviResults)
     }
@@ -77,7 +79,7 @@ class OfflineTranslateSearch : TranslateSearchProvider {
         // Na'vi=> search
         var fromNaviSearch = FuzzySearch.extractSorted(
             query,
-            dictionary.indexedNavi.map { it.word },
+            dictionary.indexedNavi.map { it.navi },
             relevanceLimit
         ).map { Pair(it, it.score) }.toMutableList()
 
@@ -105,7 +107,7 @@ class OfflineTranslateSearch : TranslateSearchProvider {
         fromNaviSearch = fromNaviSearch.sortedByDescending { it.second }.toMutableList()
 
 
-        return fromNaviSearch.map { dictionary.indexedNavi[it.first.index] }
+        return fromNaviSearch.map { dictionary.indexedNavi[it.first.index].toNavi() }
     }
 
 }

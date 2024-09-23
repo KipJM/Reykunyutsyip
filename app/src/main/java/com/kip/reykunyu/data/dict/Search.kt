@@ -29,11 +29,11 @@ enum class SearchMode(@DrawableRes val icon: Int, @StringRes val display: Int){
 
 
 interface TranslateSearchProvider{
-    suspend fun search(query: String, language: Language): TranslateResult
+    suspend fun search(query: String, language: Language, dialect: Dialect): TranslateResult
 }
 
 interface DictionarySearchRepository {
-    suspend fun translate(query: String, online: Boolean, language: Language): TranslateResult
+    suspend fun translate(query: String, online: Boolean, language: Language, dialect: Dialect): TranslateResult
 }
 
 object UniversalSearchRepository: DictionarySearchRepository {
@@ -45,7 +45,8 @@ object UniversalSearchRepository: DictionarySearchRepository {
     override suspend fun translate(
         query: String,
         online: Boolean,
-        language: Language
+        language: Language,
+        dialect: Dialect
     ): TranslateResult {
 
         if (query.isBlank()) {
@@ -56,13 +57,13 @@ object UniversalSearchRepository: DictionarySearchRepository {
         return when (online) {
             false -> {
                 //Offline
-                val result = offlineTranslateSearchProvider.search(query, language)
+                val result = offlineTranslateSearchProvider.search(query, language, dialect)
                 previousLanguage = language
                 return result
             }
             true -> {
                 //Online
-                onlineTranslateSearchProvider.search(query, language)
+                onlineTranslateSearchProvider.search(query, language, dialect)
             }
         }
     }

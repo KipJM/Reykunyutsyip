@@ -1,5 +1,6 @@
 package com.kip.reykunyu.data.api
 
+import com.kip.reykunyu.data.dict.Dialect
 import com.kip.reykunyu.data.dict.Language
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -50,7 +51,7 @@ interface ReykunyuApiService {
     suspend fun getDictionary(): String
 
     @GET(SEARCH)
-    suspend fun search(@Query("query") query: String, @Query("language") language: String): String
+    suspend fun search(@Query("query") query: String, @Query("language") language: String, @Query("dialect") dialect: String): String
 
     @GET(LANG_SUGGEST)
     suspend fun suggestLang(@Query("query") query: String, @Query("language") language: String, @Query("dialect") dialect: String): String
@@ -83,15 +84,15 @@ object ReykunyuApi {
         return retrofitService.getDictionary()
     }
 
-    suspend fun search(query: String, language: Language): String {
-        return retrofitService.search(query, language.toString())
+    suspend fun search(query: String, language: Language, dialect: Dialect): String {
+        return retrofitService.search(query, language.toString(), dialect.toString())
     }
 
-    suspend fun getSuggestionsLang(query: String, language: Language): String {
-        return retrofitService.suggestLang(query, language.toString(), "FN") //TODO
+    suspend fun getSuggestionsLang(query: String, language: Language, dialect: Dialect): String {
+        return retrofitService.suggestLang(query, language.toString(), dialect.toString())
     }
 
-    suspend fun getSuggestionsNavi(query: String, language: Language): String {
-        return retrofitService.suggestNavi(query, language.toString(), "FN") //TODO
+    suspend fun getSuggestionsNavi(query: String, language: Language, dialect: Dialect): String {
+        return retrofitService.suggestNavi(query, language.toString(), dialect.toString())
     }
 }

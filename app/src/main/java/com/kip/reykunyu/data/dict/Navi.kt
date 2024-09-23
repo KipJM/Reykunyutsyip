@@ -1,11 +1,37 @@
 package com.kip.reykunyu.data.dict
 
+import android.util.Log
 import android.util.Patterns
 import androidx.annotation.StringRes
 import androidx.compose.ui.text.AnnotatedString
 import com.kip.reykunyu.R
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+
+enum class Dialect(@StringRes val display: Int, private val requestCode: String) {
+    Forest(R.string.forest_dialect, "FN"),
+    Combined(R.string.combined_dialect, "combined"),
+    Reef(R.string.reef_dialect, "RN");
+
+    override fun toString(): String {
+        return requestCode
+    }
+
+    companion object {
+        fun fromCode(requestCode: String): Dialect{
+            return when (requestCode){
+                Forest.toString() -> Forest
+                Combined.toString() -> Combined
+                Reef.toString() -> Reef
+                else -> {
+                    // Not supposed to happen but okay
+                    Log.wtf("REYKUNYU", "Unrecognized Dialect $requestCode")
+                    return Combined
+                }
+            }
+        }
+    }
+}
 
 
 enum class Language(@StringRes val display: Int, private val requestCode: String) {

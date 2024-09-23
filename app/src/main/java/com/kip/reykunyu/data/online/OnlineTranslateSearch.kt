@@ -2,6 +2,7 @@ package com.kip.reykunyu.data.online
 
 import android.util.Log
 import com.kip.reykunyu.data.api.ReykunyuApi
+import com.kip.reykunyu.data.dict.Dialect
 import com.kip.reykunyu.data.dict.Language
 import com.kip.reykunyu.data.dict.Navi
 import com.kip.reykunyu.data.dict.OnlineNaviRaw
@@ -12,11 +13,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 class OnlineTranslateSearch : TranslateSearchProvider{
-    override suspend fun search(query: String, language: Language): TranslateResult {
+    override suspend fun search(query: String, language: Language, dialect: Dialect): TranslateResult {
         //Downloads data from Reykunyu's server
         val searchJson: String
         try{
-            searchJson = ReykunyuApi.search(query, language)
+            searchJson = ReykunyuApi.search(query, language, dialect)
 
         } catch(e: Exception) {
             Log.e("REYKUNYU", e.toString())

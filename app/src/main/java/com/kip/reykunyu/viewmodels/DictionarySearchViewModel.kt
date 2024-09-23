@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kip.reykunyu.data.dict.Dialect
 import com.kip.reykunyu.data.dict.Language
 import com.kip.reykunyu.data.dict.SearchMode
 import com.kip.reykunyu.data.dict.SearchResultStatus
@@ -52,13 +53,13 @@ class DictionarySearchViewModel: ViewModel() {
         searchInput = input
     }
 
-    fun updateSuggestions(language: Language) {
+    fun updateSuggestions(language: Language, dialect: Dialect) {
         if(searchInput.count() >= 3){
             //Start suggesting!
             searchSuggestions = SuggestionsResult(SuggestionsStatus.Loading)
             viewModelScope.launch {
                 searchSuggestions = UniversalSuggestionsRepository.suggest(
-                    query = searchInput, language = language, mode = searchMode)
+                    query = searchInput, language = language, dialect = dialect, mode = searchMode)
             }
         }else{
             searchSuggestions = SuggestionsResult(SuggestionsStatus.Standby)
@@ -70,15 +71,15 @@ class DictionarySearchViewModel: ViewModel() {
     }
 
 
-    fun search(language: Language) {
+    fun search(language: Language, dialect: Dialect) {
         searchState = SearchState.Loading
         viewModelScope.launch {
             when (searchMode) {
-                SearchMode.Translate -> translate(true, language)
+                SearchMode.Translate -> translate(true, language, dialect)
                 SearchMode.Sentence -> sentenceAnalysis()
                 SearchMode.Annotated -> annotatedDictionarySearch()
                 SearchMode.Rhymes -> rhymesSearch()
-                SearchMode.Offline -> translate(false, language)
+                SearchMode.Offline -> translate(false, language, dialect)
             }
         }
     }
@@ -99,8 +100,8 @@ class DictionarySearchViewModel: ViewModel() {
         searchState = SearchState.Error("Coming soon!", "COMING_SOON")
     }
 
-    private suspend fun translate(online: Boolean, language: Language) {
-        val response = UniversalSearchRepository.translate(searchInput, online, language)
+    private suspend fun translate(online: Boolean, language: Language, dialect: Dialect) {
+        val response = UniversalSearchRepository.translate(searchInput, online, language, dialect)
 
         searchState = when (response.status) {
             SearchResultStatus.Success -> {

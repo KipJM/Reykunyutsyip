@@ -80,5 +80,15 @@
         <b>Artwork</b> \n
         The drawings of Pandoran animals were made by Eana Unil. (Haven’t encountered one yet? Try searching for [toruk]!).
     </string>
+    <string name="forest_dialect">Forest Na\'vi</string>
+    <string name="combined_dialect">Combined / both</string>
+    <string name="reef_dialect">Reef Na\'vi (Experimental!)</string>
+    <string name="reykunyu_sidebar_menu_access">Reykunyu sidebar menu access</string>
+    <string name="settings_search">Search</string>
+    <string name="settings_search_language">Search language</string>
+    <string name="settings_dialect">Dialect</string>
+    <string name="settings_info_header">Info</string>
+    <string name="settings_readme_header">Read me!</string>
+    <string name="settings_privacy_credits"><![CDATA[Privacy & Credits]]></string>
 
 </resources>

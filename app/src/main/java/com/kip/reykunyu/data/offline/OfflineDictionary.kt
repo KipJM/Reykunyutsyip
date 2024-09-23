@@ -6,7 +6,6 @@ import com.kip.reykunyu.data.api.Response
 import com.kip.reykunyu.data.api.ResponseStatus
 import com.kip.reykunyu.data.api.ReykunyuApi
 import com.kip.reykunyu.data.dict.Language
-import com.kip.reykunyu.data.dict.Navi
 import com.kip.reykunyu.data.dict.OnlineNaviRaw
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -19,8 +18,8 @@ import java.time.Period
 import java.time.ZoneId
 
 data class NaviDictionary (
-    val dictionary: Map<String, Navi>,
-    val indexedNavi: List<Navi> = dictionary.values.toList(),
+    val dictionary: Map<String, OnlineNaviRaw>,
+    val indexedNavi: List<OnlineNaviRaw> = dictionary.values.toList(),
     var translationMap: Map<String, Int> = emptyMap(),
     var translations: List<String> = emptyList()
     ) {
@@ -31,10 +30,10 @@ data class NaviDictionary (
         translations = mutableListOf()
         indexedNavi.forEachIndexed{ index, navi ->
             for (translation in navi.translations) {
-                if (translation[language] != null) {
+                if (translation[language.toString()] != null) {
                     translationMap +=
-                        Pair(translation[language]!!, index)
-                    translations += translation[language]!!
+                        Pair(translation[language.toString()]!!, index)
+                    translations += translation[language.toString()]!!
                 }
             }
         }
@@ -183,16 +182,17 @@ object OfflineDictionary {
      * Convert Json to the Na'vi dictionary and saves it. Returns true if conversion succeeded.
      */
     private fun convertDictionary(json: String): Boolean {
-        val naviDict = mutableMapOf<String, Navi>()
+        val naviDict = mutableMapOf<String, OnlineNaviRaw>()
         try {
 
             //Parse
             val listRaw =
-                ReykunyuApi.jsonFormat.decodeFromString<List<OnlineNaviRaw>>(json)
+                ReykunyuApi.jsonFormat.decodeFromString<List<OnlineNaviRaw>>(json) //TODO: Slow!
+//            val listRaw = emptyList<OnlineNaviRaw>()
 
-            //Convert raw Navi to DictNavi
+            //Store in dict
             for (naviRaw in listRaw) {
-                naviDict[naviRaw.navi] = naviRaw.toNavi()
+                naviDict[naviRaw.navi] = naviRaw
             }
 
         }

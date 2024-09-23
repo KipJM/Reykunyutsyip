@@ -62,20 +62,21 @@ data class SuggestionsResult(
 )
 
 interface SuggestionsProvider{
-    suspend fun suggest(query: String, language: Language): SuggestionsResult
+    suspend fun suggest(query: String, language: Language, dialect: Dialect): SuggestionsResult
 }
 interface SuggestionsRepository{
-    suspend fun suggest(mode: SearchMode, query: String, language: Language): SuggestionsResult
+    suspend fun suggest(mode: SearchMode, query: String, language: Language, dialect: Dialect): SuggestionsResult
 }
 
 object UniversalSuggestionsRepository: SuggestionsRepository {
     override suspend fun suggest(
         mode: SearchMode,
         query: String,
-        language: Language
+        language: Language,
+        dialect: Dialect
     ): SuggestionsResult {
         return when(mode){
-            SearchMode.Translate -> TranslateSuggestionsProvider().suggest(query, language)
+            SearchMode.Translate -> TranslateSuggestionsProvider().suggest(query, language, dialect)
             SearchMode.Sentence -> SuggestionsResult(SuggestionsStatus.Error, info = "Coming soon!(TM)") //TODO
             SearchMode.Annotated -> SuggestionsResult(SuggestionsStatus.Error, info = "Coming soon!(TM)") //TODO
             SearchMode.Rhymes -> SuggestionsResult(SuggestionsStatus.Error, info = "Coming soon!(TM)") //TODO
@@ -86,11 +87,11 @@ object UniversalSuggestionsRepository: SuggestionsRepository {
 }
 
 class TranslateSuggestionsProvider: SuggestionsProvider{
-    override suspend fun suggest(query: String, language: Language): SuggestionsResult {
+    override suspend fun suggest(query: String, language: Language, dialect: Dialect): SuggestionsResult {
         try{
             return SuggestionsResult(
                 SuggestionsStatus.Success,
-                fromNavi = fromNaviSuggestions(query, language),
+                fromNavi = fromNaviSuggestions(query, language, dialect),
                 toNavi = toNaviSuggestions(query, language)
             )
         }
@@ -109,10 +110,10 @@ class TranslateSuggestionsProvider: SuggestionsProvider{
 
 
 //Common funcs
-suspend fun fromNaviSuggestions(query: String, language: Language): List<NaviSuggestion>
+suspend fun fromNaviSuggestions(query: String, language: Language, dialect: Dialect): List<NaviSuggestion>
 {
 
-    val suggestJson = ReykunyuApi.getSuggestionsNavi(query, language)
+    val suggestJson = ReykunyuApi.getSuggestionsNavi(query, language, dialect)
     return convertSuggestions(suggestJson)
 }
 
